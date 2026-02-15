@@ -2,94 +2,443 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Дерево с фото</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генеалогическое древо — Предки по линии отца</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #f0efe7;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .tree-container {
+            display: flex;
+            max-width: 1600px;
+            width: 100%;
+            background: #faf9f2;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,20,10,0.2);
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            border: 1px solid #d8d0b5;
+        }
+        /* основное полотно дерева */
+        .tree-canvas {
+            flex: 3;
+            padding: 30px 20px 40px 20px;
+            overflow-x: auto;
+            background: #fefcf0;
+            background-image: 
+                linear-gradient(#e5dec9 1px, transparent 1px),
+                linear-gradient(90deg, #e5dec9 1px, transparent 1px);
+            background-size: 40px 40px;
+            border-right: 2px solid #b7aa8a;
+            min-width: 0;
+        }
+        .tree-wrapper {
+            position: relative;
+            min-width: 1200px;
+        }
+        /* линии родства рисуем через абсолютные div */
+        .lines-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .line {
+            position: absolute;
+            background: #9b8c6f;
+            border-radius: 4px;
+        }
+        .vertical-line {
+            width: 3px;
+            height: 40px;
+            background: #7b6e50;
+            transform: translateX(-50%);
+        }
+        .horizontal-line {
+            height: 3px;
+            background: #7b6e50;
+        }
+        .nodes-layer {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            padding: 20px 0;
+        }
+        /* ступень — одно поколение */
+        .generation-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            position: relative;
+            min-height: 140px;
+        }
+        .gen-label {
+            width: 100%;
+            font-size: 18px;
+            font-weight: 600;
+            color: #4a3e2b;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border-bottom: 2px dashed #c9b386;
+            padding-bottom: 5px;
+            text-transform: uppercase;
+        }
+        /* карточка человека */
+        .person-node {
+            background: #fff9e6;
+            border: 3px solid #b1935c;
+            border-radius: 30px 10px 30px 10px;
+            min-width: 180px;
+            max-width: 220px;
+            padding: 12px 10px 8px 10px;
+            box-shadow: 8px 8px 0 #7b5f3a;
+            cursor: pointer;
+            transition: 0.1s linear;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.3;
+            color: #2d2a1f;
+            position: relative;
+            background: #fff9e6 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23b1935c" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="M21 15l-5-5L7 21"></path></svg>') no-repeat 5px 5px;
+            background-size: 18px;
+        }
+        .person-node.selected {
+            border-color: #c94f1f;
+            background-color: #fcede3;
+            box-shadow: 8px 8px 0 #a1451a;
+        }
+        .person-name {
+            font-weight: 700;
+            font-size: 15px;
+            margin-top: 15px;
+            color: #3d2f15;
+        }
+        .person-details {
+            font-size: 12px;
+            color: #5f4e30;
+            margin: 4px 0;
+        }
+        .person-photo-placeholder {
+            width: 50px;
+            height: 50px;
+            background: #d9cbad;
+            border: 2px dashed #937b4e;
+            border-radius: 50%;
+            margin: 5px auto 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #4f3f23;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="%236b5430" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15l-5-5L6 21"/></svg>');
+            background-size: 30px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        /* боковая панель информации */
+        .info-panel {
+            flex: 1.2;
+            background: #f2e8d5;
+            padding: 25px 15px;
+            border-left: 3px solid #b7aa8a;
+            box-shadow: inset 0 0 20px #ddcfb5;
+            overflow-y: auto;
+            max-height: 90vh;
+            position: sticky;
+            top: 20px;
+        }
+        .info-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #4f3c1d;
+            border-bottom: 3px solid #ac934b;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .info-content {
+            background: #fffbf0;
+            padding: 20px 15px;
+            border-radius: 24px 6px 24px 6px;
+            border: 2px solid #bea46a;
+            font-size: 15px;
+        }
+        .info-field {
+            margin-bottom: 15px;
+            border-left: 5px solid #c5a35b;
+            padding-left: 12px;
+        }
+        .info-field strong {
+            color: #3a2c13;
+            display: block;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .photo-upload {
+            margin-top: 20px;
+            background: #dacfb4;
+            border-radius: 30px;
+            padding: 15px;
+            text-align: center;
+        }
+        .photo-upload label {
+            background: #8f7a50;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        #person-photo-img {
+            max-width: 100%;
+            max-height: 150px;
+            margin-top: 10px;
+            border-radius: 16px;
+            border: 3px solid #785f32;
+            object-fit: cover;
+        }
+        .empty-select-msg {
+            color: #776b4b;
+            font-style: italic;
+            text-align: center;
+        }
+        /* маленькая метка супруга/родитель */
+        .relation-badge {
+            font-size: 10px;
+            background: #d1be94;
+            color: #242018;
+            border-radius: 20px;
+            padding: 2px 8px;
+            display: inline-block;
+            margin: 3px 2px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Семейное дерево</h1>
-    
-    <details open>
-        <summary>
-            <img src="buyan_kezhik/Буян-Кежик.png" alt="Фото" width="160" height="200">
-            Чооду Буян-Кежик Ногаан оол
-        </summary>
-        
-        <details style="margin-left: 20px;">
-            <summary>
-                <img src="https://via.placeholder.com/40x40" alt="Фото" width="40" height="40">
-                Мария Иванова (Дочь)
-            </summary>
-            
-            <details style="margin-left: 40px;">
-                <summary>
-                    <img src="https://via.placeholder.com/30x30" alt="Фото" width="30" height="30">
-                    Сергей Мариин (Внук)
-                </summary>
-                <p>Дети Сергея:</p>
-                <ul>
-                    <li>
-                        <img src="https://via.placeholder.com/25x25" alt="Фото" width="25" height="25">
-                        Анна Сергеева (Правнучка)
-                    </li>
-                    <li>
-                        <img src="https://via.placeholder.com/25x25" alt="Фото" width="25" height="25">
-                        Дмитрий Сергеев (Правнук)
-                    </li>
-                </ul>
-            </details>
-            
-            <details style="margin-left: 40px;">
-                <summary>
-                    <img src="https://via.placeholder.com/30x30" alt="Фото" width="30" height="30">
-                    Ольга Мариина (Внучка)
-                </summary>
-                <p>Дети Ольги:</p>
-                <ul>
-                    <li>
-                        <img src="https://via.placeholder.com/25x25" alt="Фото" width="25" height="25">
-                        Елена Ольгина (Правнучка)
-                    </li>
-                </ul>
-            </details>
-        </details>
-        
-        <details style="margin-left: 20px;">
-            <summary>
-                <img src="https://via.placeholder.com/40x40" alt="Фото" width="40" height="40">
-                Петр Иванов (Сын)
-            </summary>
-            
-            <details style="margin-left: 40px;">
-                <summary>
-                    <img src="https://via.placeholder.com/30x30" alt="Фото" width="30" height="30">
-                    Алексей Петров (Внук)
-                </summary>
-                <p>Дети Алексея:</p>
-                <ul>
-                    <li>
-                        <img src="https://via.placeholder.com/25x25" alt="Фото" width="25" height="25">
-                        Михаил Алексеев (Правнук)
-                    </li>
-                    <li>
-                        <img src="https://via.placeholder.com/25x25" alt="Фото" width="25" height="25">
-                        Татьяна Алексеева (Правнучка)
-                    </li>
-                </ul>
-            </details>
-        </details>
-    </details>
-    
-    <details open>
-        <summary>
-            <img src="https://via.placeholder.com/50x50" alt="Фото" width="50" height="50">
-            Анна Сидорова (Основатель)
-        </summary>
-        
-        <details style="margin-left: 20px;">
-            <summary>
-                <img src="https://via.placeholder.com/40x40" alt="Фото" width="40" height="40">
-                Виктор Аннов (Сын)
-            </summary>
-        </details>
-    </details>
+<div class="tree-container">
+    <!-- левая часть: дерево -->
+    <div class="tree-canvas">
+        <div class="tree-wrapper">
+            <div class="lines-layer" id="linesLayer"></div>
+            <div class="nodes-layer" id="nodesLayer">
+                <!-- Поколения будут сгенерированы из данных -->
+            </div>
+        </div>
+    </div>
+    <!-- правая панель с подробной информацией и фото -->
+    <div class="info-panel" id="infoPanel">
+        <div class="info-title">📜 Сведения о предке</div>
+        <div class="info-content" id="infoContent">
+            <div class="empty-select-msg">👆 Нажмите на карточку человека, чтобы увидеть подробности и загрузить фото</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- БАЗА ДАННЫХ (по вашему описанию) ----------
+        const persons = {};
+
+        // вспомогательная функция регистрации
+        function addPerson(id, data) { persons[id] = { id, ...data }; }
+
+        // --- Поколение 1: прародители (отцовская линия) ---
+        addPerson('p1_1', { name: 'Чооду Яар Сулепей (Чооду Яар Дандар)', generation: 1, gender: 'муж', info: { role: 'Прадедушка (отец бабушки по отцу)', full: 'Чооду Яар Сулепей', birth: '', death: '', details: 'Отец: —, мать: —. В записях также фигурирует как Дандар.' } });
+        addPerson('p1_2', { name: 'Чооду Севил Балчыма', generation: 1, gender: 'жен', info: { role: 'Прабабушка (мать бабушки по отцу)', full: 'Чооду Севил Балчыма', birth: '', details: 'Супруга Яара. Мать Дозум и Сиржим.' } });
+        // родители деда по отцу
+        addPerson('p1_3', { name: 'Чооду Чигжит Чамбал', generation: 1, gender: 'муж', info: { role: 'Прадедушка (отец деда по отцу)', full: 'Чооду Чигжит Чамбал', birth: '' } });
+        addPerson('p1_4', { name: 'Чооду Седип Сагаан', generation: 1, gender: 'жен', info: { role: 'Прабабушка (мать деда по отцу)', full: 'Чооду Седип Сагаан', birth: '' } });
+
+        // --- Поколение 2: бабушки/дедушки родители отца ---
+        addPerson('p2_1', { name: 'Допуу Дозум', generation: 2, gender: 'жен', info: { role: 'Бабушка по отцу (мать отца)', full: 'Допуу Дозум', birth: '3 августа 1894', death: '', parents: 'Отец: Чооду Яар Сулепей, мать: Чооду Севил Балчыма', certificate: 'РЭ №101142, запись 144, книга №1, стр.503', dateRecord: '20 сентября 1945', residence: 'Ү-Шынаа, арбан №2' } });
+        addPerson('p2_2', { name: 'Начын Мөңке', generation: 2, gender: 'муж', info: { role: 'Дедушка по отцу (отец отца)', full: 'Начын Мөңке', birth: '18 сентября 1890', parents: 'Отец: Чооду Чигжит Чамбал, мать: Чооду Седип Сагаан', certificate: 'РЭ 101141, запись 20.09.1945', residence: 'Ү-Шынаа, арбан №2' } });
+        // сестра бабушки
+        addPerson('p2_3', { name: 'Долгар Сиржим', generation: 2, gender: 'жен', info: { role: 'Сестра матери отца', full: 'Долгар Сиржим', birth: '10 мая 1899', parents: 'Отец: Чооду Яар Дандар, мать: Чооду Севил Балчыма', certificate: 'РЭ №111810', residence: 'Ү-Шынаа, арбан №2', dateRecord: '22 сентября 1945' } });
+
+        // --- Поколение 3: отец, его братья и сестры (дети бабушки и дедушки) ---
+        addPerson('p3_1', { name: 'Санчат (Санчат-оол) Сандан Начынович', generation: 3, gender: 'муж', info: { role: 'Мой отец', full: 'Санчат Сандан Начынович', birth: '1 августа 1920, Ү-Шынаа', parents: 'Отец: Чооду Начын Чигжит, мать: Чооду Допуу Санаа (неточности)', work: 'МЧАЭде 10 дугаар', certificate: 'РЭ№101228, запись №65 18.09.1945' } });
+        addPerson('p3_2', { name: 'Чооду Манчалмаа', generation: 3, gender: 'жен', info: { role: 'Родная сестра отца', full: 'Чооду Манчалмаа', birth: '10 сентября 1918', parents: 'Отец: Чооду Начын Чигжит, мать: Чооду Доппуу Хам Чалаң', certificate: 'РЭ № 101257, 18.09.1945', residence: 'Ү-Шынаа, арбан №2' } });
+        addPerson('p3_3', { name: 'Монгал Майдыр', generation: 3, gender: 'муж', info: { role: 'Муж Манчалмаа', full: 'Монгал Майдыр', birth: '12 февраля 1916', parents: 'Отец: Чооду Чапчый-оол Солаан, мать: Чооду Чижой Нордуппай', certificate: 'РЭ №101258', work: '"Он дугаар" МЧАЭде' } });
+        addPerson('p3_4', { name: 'Начын Саңдал', generation: 3, gender: 'муж', info: { role: 'Младший брат отца', full: 'Начын Саңдал', birth: '15 февраля 1924', parents: 'Отец: Начын Начын Чигжит, мать: Начын Допуу Яар', certificate: 'РЭ 101172, запись №124 19.09.1945', work: 'МЧАЭде 10 дугаар' } });
+        addPerson('p3_5', { name: 'Дөмүр-оол Саңмаа', generation: 3, gender: 'жен', info: { role: 'Сестра отца', full: 'Дөмүр-оол Саңмаа', birth: '31 августа 1931', parents: 'Отец: Дөмүр-оол Барза Өртээ, мать: Дөмүр-оол Сүржии Яар', certificate: 'РЭ №111808, 22.09.1945', work: 'хуу ажылдыг' } });
+        addPerson('p3_6', { name: 'Тываа Торжу', generation: 3, gender: 'муж', info: { role: 'Младший брат отца (отдан на воспитание)', full: 'Тываа Торжу', birth: '1 мая 1930', parents: 'Отец: Чоду Начин Чикжит, мать: Чоду Топу Яр', certificate: 'РЭ №138002, запись №400 14.01.1946', residence: 'Ү-Шынаа, арбан 2' } });
+        addPerson('p3_7', { name: 'Начын Чагармаа', generation: 3, gender: 'жен', info: { role: 'Младшая сестра отца', full: 'Начын Чагармаа', birth: '23 августа 1936', parents: 'Отец: Начын Мөңке Чигжит, мать: Начын Дозум Яар', certificate: 'РЭ №101139, запись 145 20.09.1945', work: 'МЧАЭ 10 дугаар' } });
+        // еще дети (Самдан, Шилимаа, Сулдум) оставлены как заглушки
+        addPerson('p3_8', { name: 'Самдан (брат отца)', generation: 3, gender: 'муж', info: { role: 'Старший брат отца', details: 'информация уточняется, место оставлено' } });
+        addPerson('p3_9', { name: 'Шилимаа (сестра отца)', generation: 3, gender: 'жен', info: { role: 'Младшая сестра отца', details: 'информация позже' } });
+        addPerson('p3_10', { name: 'Сулдум (брат отца)', generation: 3, gender: 'муж', info: { role: 'Брат отца', details: 'будет дополнено' } });
+
+        // --- Поколение 4: дети братьев и сестер отца (племянники) ---
+        addPerson('p4_1', { name: 'Монгал Мөнге', generation: 4, gender: 'муж', info: { role: 'Сын Манчалмаа', full: 'Монгал Мөнге', birth: '30.04.1937', parents: 'Отец: Монгал Майдыр, мать: Монгал Манчалмаа', certificate: 'РЭ №101251, запись 23, стр.122, 18.09.1945' } });
+        addPerson('p4_2', { name: 'Монгал Елизавета (Лица)', generation: 4, gender: 'жен', info: { role: 'Дочь Манчалмаа', full: 'Монгал Елизавета', birth: '30.04.1941', parents: 'Отец Монгал Майдыр, мать Монгал Манчалмаа', certificate: 'РЭ №101252, повторно ЩИ №030383', residence: 'Ү-Шынаа, арбан №2' } });
+        addPerson('p4_3', { name: 'Монгал Диизенмаа', generation: 4, gender: 'жен', info: { role: 'Дочь Манчалмаа', full: 'Монгал Диизенмаа', birth: '08.08.1944', parents: 'Монгал Майдыр, Монгал Манчалмаа', birthplace: 'Ү-Шынаа' } });
+
+        // --- Поколение 5: дети детей (дети Елизаветы и др.) ---
+        addPerson('p5_1', { name: 'Кунзек Владимир Викторович', generation: 5, gender: 'муж', info: { role: 'Сын Елизаветы', full: 'Кунзек Владимир Викторович', birth: '1965' } });
+        addPerson('p5_2', { name: 'Кунзек Вадим Викторович', generation: 5, gender: 'муж', info: { role: 'Сын Елизаветы', full: 'Кунзек Вадим Викторович', birth: '1967', spouse: 'жена Зарина Маадыровна' } });
+        addPerson('p5_3', { name: 'Сандый-оол Айнаш Викторовна', generation: 5, gender: 'жен', info: { role: 'Дочь Елизаветы', full: 'Сандый-оол Айнаш Викторовна', birth: '1971', spouse: 'муж Сандый-оол Андрей Анатольевич' } });
+        addPerson('p5_4', { name: 'Кунзек Аяс Викторович', generation: 5, gender: 'муж', info: { role: 'Сын Елизаветы', full: 'Кунзек Аяс Викторович', birth: '1973' } });
+        addPerson('p5_5', { name: 'Кунзек Байыр-Белек Викторович', generation: 5, gender: 'муж', info: { role: 'Сын Вадима', full: 'Кунзек Байыр-Белек', birth: '1990' } });
+        addPerson('p5_6', { name: 'Чудак Даяна Вадимовна', generation: 5, gender: 'жен', info: { role: 'Дочь Вадима', full: 'Чудак Даяна Вадимовна', birth: '1998' } });
+        addPerson('p5_7', { name: 'Сандый-оол Ирина Андреевна', generation: 5, gender: 'жен', info: { role: 'Дочь Айнаш', birth: '1996' } });
+        addPerson('p5_8', { name: 'Сандый-оол Игорь Андреевич', generation: 5, gender: 'муж', info: { role: 'Сын Айнаш', birth: '2004' } });
+
+        // --- РОДНЯ ПО МАТЕРИ (кратко, основные ступени) ---
+        // 1 поколение материнской линии (прадеды)
+        addPerson('m1_1', { name: 'Чооду Долзат Чамыян', generation: 101, info: { role: 'Мать отца моей матери', line: ' maternal' } }); 
+        addPerson('m1_2', { name: 'Чооду Данзын Чигжит', generation: 101, info: { role: 'Отец отца моей матери', line: 'maternal' } });
+        // 2 поколение (дедушка и бабушка матери)
+        addPerson('m2_1', { name: 'Чооду Ажыккай Узун ашак уруу', generation: 102, info: { role: 'Мать моей матери', full: 'Ажыккай', birth: 'ок. 1888', details: 'Ү-Шынаа, на 1945 – 57 лет' } });
+        addPerson('m2_2', { name: 'Чооду Демчиккей Данзын (Темчикей Чаваа)', generation: 102, info: { role: 'Отец моей матери', full: 'Чооду Демчиккей Данзын', birth: '15.09.1889', work: 'мал, тараа ажылы, МЧАЭ кежигүүнү' } });
+        // 3 поколение: мать и её братья/сестры
+        addPerson('m3_1', { name: 'Санчат Окаштай Демчикейовна (Чооду Оккаштай)', generation: 103, info: { role: 'Моя мать', full: 'Санчат Окаштай', birth: '01.03.1920 Ү-Шынаа', maiden: 'Чооду Оккаштай Демчиккей' } });
+        addPerson('m3_2', { name: 'Саадак Астыр', generation: 103, info: { role: 'Старший брат матери', birth: '05.07.1904', parents: 'Чооду Дөмүр-оол Өршээ, Чооду Ажыккай Тываан (умерла)' } });
+        addPerson('m3_3', { name: 'Айыыр Дүшбүн', generation: 103, info: { role: 'Старший брат матери (воспитанник)', birth: '01.09.1909', parents: 'Шалык Айыыр Барзыңай, Шалык Тыыдый Чамыйан' } });
+        addPerson('m3_4', { name: 'Дапый-оол Николай', generation: 103, info: { role: 'Старший брат матери', birth: '10.04.1915', party: 'партбилет №7900107, св-во РЭ №111033' } });
+        addPerson('m3_5', { name: 'Чооду Дуңмай', generation: 103, info: { role: 'Старшая сестра матери', birth: '15.03.1917' } });
+        addPerson('m3_6', { name: 'Диимаа Чооду', generation: 103, info: { role: 'Младшая сестра матери', birth: '08.03.1922', certificate: 'РЭ №111195, комсомольский билет', parents: 'Чооду Туктуг Темчикей, Чооду Калчан Ногаан' } });
+        addPerson('m3_7', { name: 'Хуурак-оол Чооду', generation: 103, info: { role: 'Младший брат матери', birth: '15.01.1923', parents: 'Темчикей Чаваа Данзын, Темчикей Ажыккай Узун', certificate: 'РЭ №101140' } });
+        addPerson('m3_8', { name: 'Чажылмаа Елизавета (Демчикей Чажалмаа)', generation: 103, info: { role: 'Младшая сестра матери', birth: '03.07.1929 / 15.08.1929', double: 'два свидетельства', certificate1: 'РЭ №111041', certificate2: 'РЭ №101180' } });
+        addPerson('m3_9', { name: 'Демчиккей Онермаа', generation: 103, info: { role: 'Младшая сестра матери', birth: '01.01.1936', parents: 'Демчиккей Чаваа Данзын, Чооду Кускелдей Сурун', certificate: 'РЭ №101078' } });
+        // 4 поколение — я и сиблинги (дети матери и отца)
+        addPerson('p4_self_1', { name: 'Санчат Александр Санданович (я)', generation: 104, info: { role: 'Я', full: 'Санчат Александр Санданович', birth: '06.06.1959 Самагалтай', education: 'Высшее КФКПИ, РАГС', work: 'Гос. служащий, инженер-строитель' } });
+        addPerson('p4_self_2', { name: 'Санчат Виктор Начынович', generation: 104, info: { role: 'Брат', birth: '22.08.1939', work: 'лесник' } });
+        addPerson('p4_self_3', { name: 'Санчат-оол Суктар-оол Санданович', generation: 104, info: { role: 'Брат', birth: '14.09.1944', work: 'механик лесхоза' } });
+        addPerson('p4_self_4', { name: 'Санчат Болат-оол Санданович', generation: 104, info: { role: 'Брат', birth: '25.05.1947', work: 'шофер райпо' } });
+        addPerson('p4_self_5', { name: 'Санчат Кан-оол Санданович', generation: 104, info: { role: 'Брат', birth: '19.10.1949', work: 'лесник' } });
+        addPerson('p4_self_6', { name: 'Санчат (Байыр-оол) Валентина Сандановна', generation: 104, info: { role: 'Сестра', birth: '25.08.1951', work: 'бухгалтер' } });
+        addPerson('p4_self_7', { name: 'Санчат Борис Санданович', generation: 104, info: { role: 'Брат', birth: '05.10.1953', work: 'рабочий' } });
+        addPerson('p4_self_8', { name: 'Санчат Владимир Санданович', generation: 104, info: { role: 'Брат', birth: '12.02.1956', work: 'мастер райгаза' } });
+        addPerson('p4_self_9', { name: 'Санчат Алексей Санданович', generation: 104, info: { role: 'Брат', birth: '05.07.1961', work: 'завуч спортшколы' } });
+        addPerson('p4_self_10', { name: 'Санчат Ольга Сандановна', generation: 104, info: { role: 'Сестра', birth: '25.08.1963', work: 'продавец' } });
+
+        // укажем супружество отца и матери для связи
+        // для целей отображения добавим также карточку матери как супруги отца (она уже есть m3_1)
+
+        // функция группировки по поколениям (используем числовое поле generation, у maternal 101,102,103,104)
+        const byGeneration = {};
+        Object.values(persons).forEach(p => {
+            const g = p.generation;
+            if (!byGeneration[g]) byGeneration[g] = [];
+            byGeneration[g].push(p);
+        });
+
+        // сортируем ключи поколений
+        const sortedGens = Object.keys(byGeneration).map(Number).sort((a,b) => a - b);
+
+        // строим DOM дерева
+        const nodesLayer = document.getElementById('nodesLayer');
+        nodesLayer.innerHTML = '';
+        const rowMap = {}; // запомним ряды
+
+        sortedGens.forEach(gen => {
+            const row = document.createElement('div');
+            row.className = 'generation-row';
+            row.dataset.gen = gen;
+            const label = document.createElement('div');
+            label.className = 'gen-label';
+            if (gen === 1) label.innerText = 'Ⅰ Поколение прародителей';
+            else if (gen === 2) label.innerText = 'Ⅱ Поколение бабушек и дедушек (родители отца)';
+            else if (gen === 3) label.innerText = 'Ⅲ Поколение — отец, его братья и сёстры';
+            else if (gen === 4) label.innerText = 'Ⅳ Поколение — дети братьев и сестёр отца / племянники';
+            else if (gen === 5) label.innerText = 'Ⅴ Поколение — дети детей (внуки племянников)';
+            else if (gen === 101) label.innerText = 'Ⅰ (Материнская линия) Прадеды матери';
+            else if (gen === 102) label.innerText = 'Ⅱ (Материнская линия) Бабушка и дедушка матери';
+            else if (gen === 103) label.innerText = 'Ⅲ (Материнская линия) Мать, её братья и сёстры';
+            else if (gen === 104) label.innerText = 'Ⅳ (Я и мои братья и сёстры)';
+            else label.innerText = `Поколение ${gen}`;
+            row.appendChild(label);
+
+            byGeneration[gen].forEach(person => {
+                const card = document.createElement('div');
+                card.className = 'person-node';
+                card.dataset.id = person.id;
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'person-name';
+                nameDiv.innerText = person.name.length > 30 ? person.name.slice(0,28)+'…' : person.name;
+                const detailDiv = document.createElement('div');
+                detailDiv.className = 'person-details';
+                let infoPiece = '';
+                if (person.info.birth) infoPiece = '📅 ' + person.info.birth;
+                else if (person.info.role) infoPiece = person.info.role;
+                detailDiv.innerText = infoPiece;
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'person-photo-placeholder';
+                card.appendChild(nameDiv);
+                card.appendChild(detailDiv);
+                card.appendChild(photoDiv);
+
+                card.addEventListener('click', (e) => {
+                    document.querySelectorAll('.person-node').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    showPersonInfo(person.id);
+                });
+                row.appendChild(card);
+            });
+            nodesLayer.appendChild(row);
+            rowMap[gen] = row;
+        });
+
+        // линии родства (упрощённо добавим чуть позже через observe, но для наглядности ограничимся)
+        // функция info
+        window.showPersonInfo = function(id) {
+            const p = persons[id];
+            if (!p) return;
+            const info = p.info || {};
+            const c = document.getElementById('infoContent');
+            let html = `<div class="info-field"><strong>${p.name}</strong></div>`;
+            html += `<div class="info-field"><strong>Роль</strong> ${info.role || '—'}</div>`;
+            if (info.full) html += `<div class="info-field"><strong>Полное имя</strong> ${info.full}</div>`;
+            if (info.birth) html += `<div class="info-field"><strong>Дата/место рождения</strong> ${info.birth}</div>`;
+            if (info.parents) html += `<div class="info-field"><strong>Родители</strong> ${info.parents}</div>`;
+            if (info.certificate) html += `<div class="info-field"><strong>Свидетельство</strong> ${info.certificate}</div>`;
+            if (info.residence) html += `<div class="info-field"><strong>Место жительства</strong> ${info.residence}</div>`;
+            if (info.work) html += `<div class="info-field"><strong>Деятельность</strong> ${info.work}</div>`;
+            if (info.details) html += `<div class="info-field"><strong>Дополнительно</strong> ${info.details}</div>`;
+            if (info.spouse) html += `<div class="info-field"><strong>Супруг(а)</strong> ${info.spouse}</div>`;
+
+            html += `<div class="photo-upload">
+                        <label for="photoInput">📷 Загрузить фото</label>
+                        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(event)">
+                        <div id="photo-preview"></div>
+                    </div>`;
+            c.innerHTML = html;
+            window.currentPhotoPerson = id;
+        };
+
+        window.previewPhoto = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewDiv = document.getElementById('photo-preview');
+                    previewDiv.innerHTML = `<img src="${e.target.result}" id="person-photo-img" alt="фото">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        // выделим себя
+        setTimeout(() => {
+            const myCard = document.querySelector('[data-id="p4_self_1"]');
+            if (myCard) myCard.click();
+        }, 300);
+    })();
+</script>
+
+<!-- дополнительно мелкая стилизация линий, но в этом коде линии будут нарисованы при желании отдельно. Для простоты ограничимся структурой -->
 </body>
 </html>
