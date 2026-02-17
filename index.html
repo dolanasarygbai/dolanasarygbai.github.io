@@ -74,8 +74,8 @@
         .tree {
             display: flex;
             flex-direction: column;
-            min-width: 2800px;
-            min-height: 2200px;
+            min-width: 3000px;
+            min-height: 2400px;
             padding: 80px 100px;
             position: relative;
         }
@@ -85,21 +85,21 @@
             justify-content: center;
             align-items: flex-start;
             position: relative;
-            margin-bottom: 150px; /* Увеличено расстояние между поколениями */
+            margin-bottom: 180px; /* Увеличено расстояние */
             width: 100%;
         }
 
         .gen-row {
             display: flex;
             flex-wrap: nowrap;
-            gap: 60px; /* Увеличено расстояние между карточками */
+            gap: 70px; /* Увеличено расстояние */
             justify-content: center;
             position: relative;
         }
 
         .person-card {
-            min-width: 200px;
-            max-width: 230px;
+            min-width: 210px;
+            max-width: 240px;
             background: #1e2a36;
             border-radius: 20px;
             padding: 15px 12px;
@@ -181,7 +181,7 @@
             z-index: 10;
         }
 
-        .connector-svg path {
+        .connector-svg path, .connector-svg line {
             stroke-width: 3px;
             fill: none;
             stroke-linecap: round;
@@ -196,6 +196,13 @@
         .maternal-path {
             stroke: #c77dff;
             stroke-opacity: 0.6;
+        }
+
+        .marriage-line {
+            stroke: #ffd966;
+            stroke-opacity: 0.8;
+            stroke-width: 3px;
+            stroke-dasharray: 5,5;
         }
 
         .highlighted-path {
@@ -266,6 +273,27 @@
             color: #1a1a2e;
             font-weight: bold;
             border-color: #fff;
+        }
+
+        .ancestors-group, .children-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .ancestor, .child {
+            padding: 6px 12px;
+            background: #1f3345;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid #5f7f9f;
+        }
+
+        .ancestor:hover, .child:hover {
+            background: #2a4a6a;
         }
 
         .legend {
@@ -347,6 +375,22 @@
             border: 1px solid #5f7f9f;
         }
 
+        .search-btn {
+            background: #ffd966;
+            color: #1a1a2e;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
         .toggle-panel-btn {
             background: #ffd966;
             color: #1a1a2e;
@@ -367,62 +411,120 @@
             border: 2px solid #3b5e8b;
             background: #1f2a36;
         }
+
+        .search-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 5px;
+            background: #1f2a36;
+            padding: 8px 15px;
+            border-radius: 40px;
+            border: 1px solid #5f7f9f;
+        }
+
+        .search-input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            padding: 5px;
+            width: 200px;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: #8a9db0;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background: #1f2a36;
+            border-radius: 12px;
+            border: 1px solid #5f7f9f;
+            max-height: 300px;
+            overflow-y: auto;
+            width: 250px;
+            display: none;
+            z-index: 2000;
+        }
+
+        .search-result-item {
+            padding: 10px;
+            border-bottom: 1px solid #3f4f60;
+            cursor: pointer;
+        }
+
+        .search-result-item:hover {
+            background: #2f4055;
+        }
     </style>
 </head>
 <body>
     <div class="main-content">
         <div class="tree-wrapper" id="treeWrapper">
+            <!-- Поиск -->
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="Поиск по имени...">
+                <i class="fas fa-search" style="color: #ffd966;"></i>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+
             <div class="tree" id="tree">
                 <svg class="connector-svg" id="lineSvg"></svg>
                 
                 <!-- ПОКОЛЕНИЕ 1 (прадеды) -->
-                <div class="generation" id="gen1">
+                <div class="generation" id="gen1" style="margin-bottom: 180px;">
                     <div class="gen-row" style="justify-content: space-between; width: 100%;">
                         <!-- сторона отца (синие) -->
-                        <div style="display: flex; gap: 40px;">
+                        <div style="display: flex; gap: 50px;">
                             <div class="person-card paternal-line" data-id="yaar" data-side="paternal">
                                 <div class="person-name">Чооду Яар Сулепей</div>
                                 <div class="person-years">~1860 г.</div>
-                                <div class="person-relation">прадед (отца)</div>
+                                <div class="person-relation">прадедушка (со стороны отца)</div>
                             </div>
                             <div class="person-card paternal-line" data-id="sevil" data-side="paternal">
                                 <div class="person-name">Чооду Севил Балчыма</div>
                                 <div class="person-years">~1865 г.</div>
-                                <div class="person-relation">прабабушка (отца)</div>
+                                <div class="person-relation">прабабушка (со стороны отца)</div>
                             </div>
                             <div class="person-card paternal-line" data-id="chambal" data-side="paternal">
                                 <div class="person-name">Чооду Чигжит Чамбал</div>
                                 <div class="person-years">~1865 г.</div>
-                                <div class="person-relation">прадед (отца)</div>
+                                <div class="person-relation">прадедушка (со стороны отца)</div>
                             </div>
                             <div class="person-card paternal-line" data-id="sagaan" data-side="paternal">
                                 <div class="person-name">Чооду Седип Сагаан</div>
                                 <div class="person-years">~1870 г.</div>
-                                <div class="person-relation">прабабушка (отца)</div>
+                                <div class="person-relation">прабабушка (со стороны отца)</div>
                             </div>
                         </div>
                         
                         <div style="color: #6d8eb0; padding: 0 20px;">⸻ разрыв ⸻</div>
                         
                         <!-- сторона матери (лиловые) -->
-                        <div style="display: flex; gap: 40px;">
+                        <div style="display: flex; gap: 50px;">
                             <div class="person-card maternal-line" data-id="dolzat" data-side="maternal">
                                 <div class="person-name">Чооду Долзат Чамыян</div>
                                 <div class="person-years">~1868 г.</div>
-                                <div class="person-relation">прабабушка (матери)</div>
+                                <div class="person-relation">прабабушка (со стороны матери)</div>
                             </div>
                             <div class="person-card maternal-line" data-id="danzyn" data-side="maternal">
                                 <div class="person-name">Чооду Данзын Чигжит</div>
                                 <div class="person-years">~1863 г.</div>
-                                <div class="person-relation">прадед (матери)</div>
+                                <div class="person-relation">прадедушка (со стороны матери)</div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- ПОКОЛЕНИЕ 2 (бабушки/дедушки) -->
-                <div class="generation" id="gen2">
-                    <div class="gen-row">
+                <div class="generation" id="gen2" style="margin-bottom: 180px;">
+                    <div class="gen-row" style="gap: 70px;">
                         <div class="person-card paternal-line" data-id="dozum">
                             <div class="person-name">Допуу Дозум</div>
                             <div class="person-years">3.08.1894 г.</div>
@@ -452,8 +554,8 @@
                 </div>
                 
                 <!-- ПОКОЛЕНИЕ 3 (родители, братья, сестры) -->
-                <div class="generation" id="gen3">
-                    <div class="gen-row" style="gap: 40px;">
+                <div class="generation" id="gen3" style="margin-bottom: 180px;">
+                    <div class="gen-row" style="gap: 50px;">
                         <!-- сторона отца -->
                         <div class="person-card paternal-line" data-id="manchalmaa">
                             <div class="person-name">Манчалмаа</div>
@@ -526,8 +628,8 @@
                 </div>
                 
                 <!-- ПОКОЛЕНИЕ 4 (я, братья/сестры, дети Манчалмаа и Саңмаа) -->
-                <div class="generation" id="gen4">
-                    <div class="gen-row" style="gap: 35px;">
+                <div class="generation" id="gen4" style="margin-bottom: 180px;">
+                    <div class="gen-row" style="gap: 40px;">
                         <!-- Дети Манчалмаа -->
                         <div class="person-card paternal-line" data-id="monge">
                             <div class="person-name">Монгал Мөнге</div>
@@ -628,7 +730,7 @@
                 </div>
                 
                 <!-- ПОКОЛЕНИЕ 5 -->
-                <div class="generation" id="gen5">
+                <div class="generation" id="gen5" style="margin-bottom: 150px;">
                     <div class="gen-row">
                         <div class="person-card maternal-line" data-id="dolana">
                             <div class="person-name">Сарыгбай Долана</div>
@@ -678,8 +780,18 @@
             </div>
 
             <div style="margin-top: 20px;">
+                <h3 class="section-title"><i class="fas fa-arrow-up"></i> Предки</h3>
+                <div class="ancestors-group" id="ancestors-list"></div>
+            </div>
+
+            <div style="margin-top: 20px;">
                 <h3 class="section-title"><i class="fas fa-users"></i> Братья и сестры</h3>
                 <div class="siblings-group" id="siblings-list"></div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 class="section-title"><i class="fas fa-arrow-down"></i> Дети</h3>
+                <div class="children-group" id="children-list"></div>
             </div>
 
             <div style="margin-top: 20px;">
@@ -715,22 +827,19 @@
     <script>
         // ДАННЫЕ ДЛЯ КАРТОЧЕК
         const personDetails = {
-            // 1 поколение
             yaar: { name: 'Чооду Яар Сулепей (Чооду Яар Дандар)', birth: '~1860', photo: '', details: 'Прадедушка со стороны отца. Муж Чооду Севил Балчыма.' },
             sevil: { name: 'Чооду Севил Балчыма', birth: '~1865', photo: '', details: 'Прабабушка со стороны отца. Жена Чооду Яар Сулепей.' },
-            chambal: { name: 'Чооду Чигжит Чамбал', birth: '~1865', photo: '', details: 'Прадедушка (дед отца). Муж Чооду Седип Сагаан.' },
-            sagaan: { name: 'Чооду Седип Сагаан', birth: '~1870', photo: '', details: 'Прабабушка (дед отца). Жена Чооду Чигжит Чамбал.' },
+            chambal: { name: 'Чооду Чигжит Чамбал', birth: '~1865', photo: '', details: 'Прадедушка со стороны отца. Муж Чооду Седип Сагаан.' },
+            sagaan: { name: 'Чооду Седип Сагаан', birth: '~1870', photo: '', details: 'Прабабушка со стороны отца. Жена Чооду Чигжит Чамбал.' },
             dolzat: { name: 'Чооду Долзат Чамыян', birth: '~1868', photo: '', details: 'Прабабушка со стороны матери.' },
             danzyn: { name: 'Чооду Данзын Чигжит', birth: '~1863', photo: '', details: 'Прадедушка со стороны матери.' },
             
-            // 2 поколение
             dozum: { name: 'Допуу Дозум', birth: '3 августа 1894', photo: 'images/dopuu_dozum.jpg', details: 'Моя бабушка по отцу, мать моего отца. Отец: Чооду Яар Сулепей, мать: Чооду Севил Балчыма. Св-во РЭ №101142, запись 144. Место: Ү-Шынаа, арбан №2.' },
             sirzhim: { name: 'Долгар Сиржим', birth: '10 мая 1899', photo: 'images/dolgar_sirzhim.jpg', details: 'Сестра матери моего отца. Отец: Чооду Яар Дандар, мать: Чооду Севил Балчыма. Св-во РЭ №111810. Место: Ү-Шынаа, арбан №2.' },
             monke: { name: 'Начын Мөңке', birth: '18 сентября 1890', photo: 'images/nachyn_monke.jpg', details: 'Мой дедушка по отцу, отец моего отца. Отец: Чооду Чигжит Чамбал, мать: Чооду Седип Сагаан. Св-во РЭ 101141. Место: Ү-Шынаа, арбан №2.' },
             demchik: { name: 'Чооду Демчиккей Данзын', birth: '15 сентября 1889', photo: 'images/demchikkey.jpg', details: 'Отец моей матери. В записи акта: Темчикей Чаваа. Род деятельности: мал, тараа ажылы кылып чораан. МЧАЭ кежигүүнү. Родители: Чооду Долзат Чамыян и Чооду Данзын Чигжит.' },
             azhyk: { name: 'Чооду Ажыккай Узун ашак уруу', birth: '~1888', photo: 'images/azhykkay.jpg', details: 'Бабушка по материнской линии. Место рождения Ү-Шынаа. В 1945 году ей было 57 лет.' },
             
-            // 3 поколение (братья и сестры матери)
             saadak: { name: 'Саадак Астыр', birth: '5 июля 1904', photo: '', details: 'Старший брат моей матери. В документах указаны другие родители: Чооду Дөмүр-оол Өршээ (62 года) и Чооду Ажыккай Тываан (умершая 19.09.1945). Возможно, был отдан на воспитание.' },
             ayyyr: { name: 'Айыыр Дүшбүн', birth: '1 сентября 1909', photo: '', details: 'Старший брат моей матери. Родился в О-Шынаа. В документах указаны другие родители: Шалык Айыыр Барзыңай (49 лет) и Шалык Тыыдый Чамыйан (59 лет). Имена разные, возможно отдан на воспитание.' },
             dapyy: { name: 'Дапый-оол Николай', birth: '10 апреля 1915', photo: '', details: 'Старший брат моей матери. Родился в Ү-Шынаа. Партбилет №7900107, Св-РЭ №111033.' },
@@ -741,18 +850,15 @@
             chazhil: { name: 'Чажылмаа Елизавета', birth: '3 июля 1929', photo: 'images/chazhil.jpg', details: 'Младшая сестра моей матери. Родилась в Арбан №2, сумон У-Шынаа. Отец: Чооду Демчиккей Данзын (57 лет), мать: Чооду Ажыккай Узун (59 лет). РЭ №111041. Комсомольский билет №22832487. Также есть второе имя: Демчикей Чажалмаа.' },
             onermaa: { name: 'Демчиккей Онермаа', birth: '1 января 1936', photo: '', details: 'Младшая сестра моей матери. Родилась в Арбан №2, сумон У-Шынаа. Отец: Демчиккей Чаваа Данзын (56 лет), мать: Чооду Кускелдей Сурун (43 лет). РЭ №101078.' },
             
-            // отец и его родственники
             manchalmaa: { name: 'Чооду Манчалмаа', birth: '10 сентября 1918', photo: 'images/manchalmaa.jpg', details: 'Сестра моего отца. Родители: Начын Мөңке и Допуу Дозум. Муж: Монгал Майдыр.' },
             sandan: { name: 'Санчат Сандан Начынович', birth: '1 августа 1920', photo: 'images/sanchat_sandan.jpg', details: 'Мой отец. Родился в Ү-Шынаа. Родители: Начын Мөңке и Допуу Дозум. Св-во РЭ№101228, запись №65. МЧАЭде 10 дугаар.' },
             sandal: { name: 'Начын Саңдал', birth: '15 февраля 1924', photo: 'images/sandal.jpg', details: 'Младший брат моего отца. Родители: Начын Мөңке и Допуу Дозум. Св-во РЭ 101172.' },
             sanmaa: { name: 'Дөмүр-оол Саңмаа', birth: '31 августа 1931', photo: 'images/sanmaa.jpg', details: 'Сестра моего отца. Родители: Дөмүр-оол Барза Өртээ и Дөмүр-оол Сүржии Яар (возможно отдана на воспитание). Св-во РЭ №111808.' },
             
-            // 4 поколение (дети Манчалмаа)
             monge: { name: 'Монгал Мөнге', birth: '30 апреля 1937', photo: 'images/mongal_monge.jpg', details: 'Сын Манчалмаа. Отец: Монгал Майдыр Чапчыт, мать: Монгал Манчалмаа Начын. РЭ №101251.' },
             elizaveta: { name: 'Монгал Елизавета', birth: '30 апреля 1941', photo: 'images/mongal_elizaveta.jpg', details: 'Дочь Манчалмаа. Отец: Монгал Майдыр Чапчыт, мать: Монгал Манчалмаа Начын. РЭ №101252.' },
             diizenmaa: { name: 'Монгал Диизенмаа', birth: '8 августа 1944', photo: 'images/diizenmaa.jpg', details: 'Дочь Манчалмаа. Отец: Монгал Майдыр Чапчыт, мать: Монгал Манчалмаа Начын. Муж: Чагар-оол Седип-оол.' },
             
-            // дети Саңмаа
             kechil_vlad: { name: 'Кечил-оол Владимир Сириндикович', birth: '12 февраля 1952', photo: 'images/kechil_ool_vladimir.png', details: 'Сын Саңмаа.' },
             bopuymaa: { name: 'Билчеймаа Бопуймаа Кечил-ооловна', birth: '18 июня 1954', photo: 'images/bilcheymaa_bopuymaa.png', details: 'Дочь Саңмаа.' },
             polum_natalya: { name: 'Полум Наталья Кечил-ооловна', birth: '2 марта 1956', photo: 'images/polum_natalya.png', details: 'Дочь Саңмаа.' },
@@ -761,7 +867,6 @@
             mikhail: { name: 'Билчеймаа Михаил Кечил-оолович', birth: '1 декабря 1961', photo: 'images/bilcheymaa_misha.png', details: 'Сын Саңмаа.' },
             saida: { name: 'Сарыгбай Саида Кечил-ооловна', birth: '10 декабря 1964', photo: 'images/sarygbay_saida.png', details: 'Дочь Саңмаа.' },
             
-            // мои братья и сестры
             viktor: { name: 'Санчат Виктор Начынович', birth: '22 августа 1939', photo: '', details: 'Мой брат. Образование: начальное, сред. спец. Род деятельности: пенсионер, вальщик леса, лесник.' },
             suktar: { name: 'Санчат-оол Суктар-оол Санданович', birth: '14 сентября 1944', photo: '', details: 'Мой брат. Образование: сред.спец, инженер-механик. Механик лесхоза.' },
             bolato: { name: 'Санчат Болат-оол Санданович', birth: '25 мая 1947', photo: '', details: 'Мой брат. Образование: среднее. Шофер райпо.' },
@@ -773,13 +878,79 @@
             alexey: { name: 'Санчат Алексей Санданович', birth: '5 июля 1961', photo: '', details: 'Мой брат. Образование: высшее КФКПИ, инженер-механик. Завуч спорт школы.' },
             olga: { name: 'Санчат Ольга Сандановна', birth: '25 августа 1963', photo: '', details: 'Моя сестра. Образование: сред.спец, Красноярский КООП техникум. Продавец.' },
             
-            // 5-6 поколение
             dolana: { name: 'Сарыгбай Долана Владимировна', birth: '23 сентября 1994', photo: '', details: 'Дочь Сарыгбай Саиды.' },
             choig: { name: 'Сарыгбай Чойгаана Владимировна', birth: '10 ноября 1996', photo: '', details: 'Дочь Сарыгбай Саиды.' },
             victoria: { name: 'Сарыгбай Виктория', birth: '~2018', photo: '', details: 'Дочь Сарыгбай Чойгааны.' }
         };
 
-        // Состояние панели
+        // Связи для предков/детей
+        const familyRelations = {
+            yaar: { parents: [], children: ['dozum', 'sirzhim'], spouse: 'sevil' },
+            sevil: { parents: [], children: ['dozum', 'sirzhim'], spouse: 'yaar' },
+            chambal: { parents: [], children: ['monke'], spouse: 'sagaan' },
+            sagaan: { parents: [], children: ['monke'], spouse: 'chambal' },
+            dolzat: { parents: [], children: ['demchik'], spouse: 'danzyn' },
+            danzyn: { parents: [], children: ['demchik'], spouse: 'dolzat' },
+            
+            dozum: { parents: ['yaar', 'sevil'], children: ['manchalmaa', 'sandan', 'sandal'], spouse: 'monke' },
+            monke: { parents: ['chambal', 'sagaan'], children: ['manchalmaa', 'sandan', 'sandal'], spouse: 'dozum' },
+            sirzhim: { parents: ['yaar', 'sevil'], children: [], spouse: '' },
+            demchik: { parents: ['dolzat', 'danzyn'], children: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'], spouse: 'azhyk' },
+            azhyk: { parents: [], children: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'], spouse: 'demchik' },
+            
+            manchalmaa: { parents: ['dozum', 'monke'], children: ['monge', 'elizaveta', 'diizenmaa'], spouse: '' },
+            sandan: { parents: ['dozum', 'monke'], children: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alex', 'alexey', 'olga'], spouse: 'okashtay' },
+            sandal: { parents: ['dozum', 'monke'], children: [], spouse: '' },
+            sanmaa: { parents: [], children: ['kechil_vlad', 'bopuymaa', 'polum_natalya', 'chechena', 'fedor', 'mikhail', 'saida'], spouse: '' },
+            
+            okashtay: { parents: ['demchik', 'azhyk'], children: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alex', 'alexey', 'olga'], spouse: 'sandan' },
+            saadak: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            ayyyr: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            dapyy: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            dungmai: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            diimaa: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            khuurak: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            chazhil: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            onermaa: { parents: ['demchik', 'azhyk'], children: [], spouse: '' },
+            
+            monge: { parents: ['manchalmaa'], children: [], spouse: '' },
+            elizaveta: { parents: ['manchalmaa'], children: [], spouse: '' },
+            diizenmaa: { parents: ['manchalmaa'], children: [], spouse: '' },
+            
+            kechil_vlad: { parents: ['sanmaa'], children: [], spouse: '' },
+            bopuymaa: { parents: ['sanmaa'], children: [], spouse: '' },
+            polum_natalya: { parents: ['sanmaa'], children: [], spouse: '' },
+            chechena: { parents: ['sanmaa'], children: [], spouse: '' },
+            fedor: { parents: ['sanmaa'], children: [], spouse: '' },
+            mikhail: { parents: ['sanmaa'], children: [], spouse: '' },
+            saida: { parents: ['sanmaa'], children: ['dolana', 'choig'], spouse: '' },
+            
+            viktor: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            suktar: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            bolato: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            kanool: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            valia: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            boris: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            vladimir: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            alex: { parents: ['sandan', 'okashtay'], children: ['dolana', 'choig'], spouse: '' },
+            alexey: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            olga: { parents: ['sandan', 'okashtay'], children: [], spouse: '' },
+            
+            dolana: { parents: ['saida', 'alex'], children: [], spouse: '' },
+            choig: { parents: ['saida', 'alex'], children: ['victoria'], spouse: '' },
+            victoria: { parents: ['choig'], children: [], spouse: '' }
+        };
+
+        // Супружеские пары для линий
+        const marriedCouples = [
+            { husband: 'yaar', wife: 'sevil', children: ['dozum', 'sirzhim'] },
+            { husband: 'chambal', wife: 'sagaan', children: ['monke'] },
+            { husband: 'danzyn', wife: 'dolzat', children: ['demchik'] },
+            { husband: 'monke', wife: 'dozum', children: ['manchalmaa', 'sandan', 'sandal'] },
+            { husband: 'demchik', wife: 'azhyk', children: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'] },
+            { husband: 'sandan', wife: 'okashtay', children: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alex', 'alexey', 'olga'] }
+        ];
+
         let panelVisible = true;
         let currentSelectedId = null;
 
@@ -795,7 +966,7 @@
             }
         }
 
-        // Клик вне человека - скрываем панель
+        // Клик вне человека
         document.getElementById('treeWrapper').addEventListener('click', function(e) {
             if (!e.target.closest('.person-card')) {
                 if (panelVisible) {
@@ -803,56 +974,6 @@
                 }
             }
         });
-
-        // Функция для получения братьев и сестер человека
-        function getSiblings(personId) {
-            const siblingGroups = {
-                // Братья и сестры матери
-                saadak: ['ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'],
-                ayyyr: ['saadak', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'],
-                dapyy: ['saadak', 'ayyyr', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'],
-                dungmai: ['saadak', 'ayyyr', 'dapyy', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'],
-                okashtay: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'diimaa', 'khuurak', 'chazhil', 'onermaa'],
-                diimaa: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'khuurak', 'chazhil', 'onermaa'],
-                khuurak: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'chazhil', 'onermaa'],
-                chazhil: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'onermaa'],
-                onermaa: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil'],
-                
-                // Братья и сестры отца
-                sandan: ['manchalmaa', 'sandal', 'sanmaa'],
-                manchalmaa: ['sandan', 'sandal', 'sanmaa'],
-                sandal: ['sandan', 'manchalmaa', 'sanmaa'],
-                sanmaa: ['sandan', 'manchalmaa', 'sandal'],
-                
-                // Дети Манчалмаа
-                monge: ['elizaveta', 'diizenmaa'],
-                elizaveta: ['monge', 'diizenmaa'],
-                diizenmaa: ['monge', 'elizaveta'],
-                
-                // Дети Саңмаа
-                kechil_vlad: ['bopuymaa', 'polum_natalya', 'chechena', 'fedor', 'mikhail', 'saida'],
-                bopuymaa: ['kechil_vlad', 'polum_natalya', 'chechena', 'fedor', 'mikhail', 'saida'],
-                polum_natalya: ['kechil_vlad', 'bopuymaa', 'chechena', 'fedor', 'mikhail', 'saida'],
-                chechena: ['kechil_vlad', 'bopuymaa', 'polum_natalya', 'fedor', 'mikhail', 'saida'],
-                fedor: ['kechil_vlad', 'bopuymaa', 'polum_natalya', 'chechena', 'mikhail', 'saida'],
-                mikhail: ['kechil_vlad', 'bopuymaa', 'polum_natalya', 'chechena', 'fedor', 'saida'],
-                saida: ['kechil_vlad', 'bopuymaa', 'polum_natalya', 'chechena', 'fedor', 'mikhail'],
-                
-                // Мои братья и сестры
-                alex: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alexey', 'olga'],
-                viktor: ['alex', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alexey', 'olga'],
-                suktar: ['viktor', 'alex', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alexey', 'olga'],
-                bolato: ['viktor', 'suktar', 'alex', 'kanool', 'valia', 'boris', 'vladimir', 'alexey', 'olga'],
-                kanool: ['viktor', 'suktar', 'bolato', 'alex', 'valia', 'boris', 'vladimir', 'alexey', 'olga'],
-                valia: ['viktor', 'suktar', 'bolato', 'kanool', 'alex', 'boris', 'vladimir', 'alexey', 'olga'],
-                boris: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'alex', 'vladimir', 'alexey', 'olga'],
-                vladimir: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'alex', 'alexey', 'olga'],
-                alexey: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alex', 'olga'],
-                olga: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alexey', 'alex']
-            };
-            
-            return siblingGroups[personId] || [];
-        }
 
         // Клик по человеку
         document.querySelectorAll('.person-card').forEach(card => {
@@ -866,22 +987,17 @@
                 const id = card.dataset.id;
                 currentSelectedId = id;
                 
-                // Подсветка
                 highlightRelatives(id);
-                
-                // Обновляем информацию
                 updateInfoPanel(id);
-                
-                // Обновляем список братьев и сестер
-                updateSiblingsList(id);
+                updateFamilyLists(id);
                 
                 // Подсветка линий
-                document.querySelectorAll('#lineSvg path').forEach(p => p.classList.remove('highlighted-path'));
+                document.querySelectorAll('#lineSvg path, #lineSvg line').forEach(p => p.classList.remove('highlighted-path'));
                 setTimeout(() => {
-                    document.querySelectorAll('#lineSvg path').forEach(p => p.classList.add('highlighted-path'));
+                    document.querySelectorAll('#lineSvg path, #lineSvg line').forEach(p => p.classList.add('highlighted-path'));
                 }, 50);
                 setTimeout(() => {
-                    document.querySelectorAll('#lineSvg path').forEach(p => p.classList.remove('highlighted-path'));
+                    document.querySelectorAll('#lineSvg path, #lineSvg line').forEach(p => p.classList.remove('highlighted-path'));
                 }, 800);
             });
         });
@@ -899,15 +1015,12 @@
             const relatives = new Set();
             relatives.add(selectedId);
             
-            // Добавляем родителей и детей
-            simplifiedPairs.forEach(pair => {
-                if (pair.parents && pair.parents.includes(selectedId)) {
-                    pair.children.forEach(child => relatives.add(child));
-                }
-                if (pair.children && pair.children.includes(selectedId)) {
-                    pair.parents.forEach(parent => relatives.add(parent));
-                }
-            });
+            const rel = familyRelations[selectedId];
+            if (rel) {
+                rel.parents.forEach(p => relatives.add(p));
+                rel.children.forEach(c => relatives.add(c));
+                if (rel.spouse) relatives.add(rel.spouse);
+            }
             
             document.querySelectorAll('.person-card').forEach(card => {
                 const cardId = card.dataset.id;
@@ -941,44 +1054,76 @@
                 `<strong>Текущий выбор:</strong> ${person.name}`;
         }
 
-        function updateSiblingsList(personId) {
-            const siblings = getSiblings(personId);
-            const container = document.getElementById('siblings-list');
-            container.innerHTML = '';
+        function updateFamilyLists(id) {
+            const rel = familyRelations[id];
+            if (!rel) return;
             
-            if (siblings.length === 0) {
-                container.innerHTML = '<div style="color: #888;">Нет братьев и сестер</div>';
-                return;
+            // Предки
+            const ancestorsList = document.getElementById('ancestors-list');
+            ancestorsList.innerHTML = '';
+            if (rel.parents && rel.parents.length > 0) {
+                rel.parents.forEach(pId => {
+                    if (personDetails[pId]) {
+                        const btn = document.createElement('div');
+                        btn.className = 'ancestor';
+                        btn.textContent = personDetails[pId].name.split(' ').slice(0,2).join(' ');
+                        btn.title = personDetails[pId].name;
+                        btn.onclick = () => document.querySelector(`[data-id="${pId}"]`).click();
+                        ancestorsList.appendChild(btn);
+                    }
+                });
+            } else {
+                ancestorsList.innerHTML = '<div style="color: #888;">Нет информации о предках</div>';
             }
             
-            siblings.forEach(sibId => {
-                const sib = personDetails[sibId];
-                if (!sib) return;
-                
-                const btn = document.createElement('div');
-                btn.className = 'sibling';
-                btn.textContent = sib.name.split(' ').slice(-1)[0] || sib.name;
-                btn.title = sib.name;
-                btn.onclick = () => {
-                    document.querySelector(`[data-id="${sibId}"]`).click();
-                };
-                container.appendChild(btn);
-            });
+            // Братья и сестры
+            const siblingsList = document.getElementById('siblings-list');
+            siblingsList.innerHTML = '';
+            
+            if (rel.parents && rel.parents.length > 0) {
+                const parent1 = rel.parents[0];
+                const parent1Rel = familyRelations[parent1];
+                if (parent1Rel && parent1Rel.children) {
+                    const siblings = parent1Rel.children.filter(c => c !== id);
+                    if (siblings.length > 0) {
+                        siblings.forEach(sId => {
+                            if (personDetails[sId]) {
+                                const btn = document.createElement('div');
+                                btn.className = 'sibling';
+                                btn.textContent = personDetails[sId].name.split(' ').slice(-1)[0];
+                                btn.title = personDetails[sId].name;
+                                btn.onclick = () => document.querySelector(`[data-id="${sId}"]`).click();
+                                siblingsList.appendChild(btn);
+                            }
+                        });
+                    } else {
+                        siblingsList.innerHTML = '<div style="color: #888;">Нет братьев и сестер</div>';
+                    }
+                } else {
+                    siblingsList.innerHTML = '<div style="color: #888;">Нет информации</div>';
+                }
+            } else {
+                siblingsList.innerHTML = '<div style="color: #888;">Нет информации</div>';
+            }
+            
+            // Дети
+            const childrenList = document.getElementById('children-list');
+            childrenList.innerHTML = '';
+            if (rel.children && rel.children.length > 0) {
+                rel.children.forEach(cId => {
+                    if (personDetails[cId]) {
+                        const btn = document.createElement('div');
+                        btn.className = 'child';
+                        btn.textContent = personDetails[cId].name.split(' ').slice(0,2).join(' ');
+                        btn.title = personDetails[cId].name;
+                        btn.onclick = () => document.querySelector(`[data-id="${cId}"]`).click();
+                        childrenList.appendChild(btn);
+                    }
+                });
+            } else {
+                childrenList.innerHTML = '<div style="color: #888;">Нет детей</div>';
+            }
         }
-
-        // Упрощенные пары для линий (одна линия от пары родителей к детям)
-        const simplifiedPairs = [
-            { parents: ['yaar', 'sevil'], children: ['dozum', 'sirzhim'] },
-            { parents: ['chambal', 'sagaan'], children: ['monke'] },
-            { parents: ['dolzat', 'danzyn'], children: ['demchik', 'azhyk'] },
-            { parents: ['dozum', 'monke'], children: ['manchalmaa', 'sandan', 'sandal'] },
-            { parents: ['demchik', 'azhyk'], children: ['saadak', 'ayyyr', 'dapyy', 'dungmai', 'okashtay', 'diimaa', 'khuurak', 'chazhil', 'onermaa'] },
-            { parents: ['manchalmaa'], children: ['monge', 'elizaveta', 'diizenmaa'] },
-            { parents: ['sanmaa'], children: ['kechil_vlad', 'bopuymaa', 'polum_natalya', 'chechena', 'fedor', 'mikhail', 'saida'] },
-            { parents: ['sandan', 'okashtay'], children: ['viktor', 'suktar', 'bolato', 'kanool', 'valia', 'boris', 'vladimir', 'alex', 'alexey', 'olga'] },
-            { parents: ['saida'], children: ['dolana', 'choig'] },
-            { parents: ['choig'], children: ['victoria'] }
-        ];
 
         // Рисование линий
         function drawLines() {
@@ -996,45 +1141,88 @@
                 };
             }
             
-            simplifiedPairs.forEach(pair => {
-                // Находим среднюю точку между родителями
-                let parentX = 0;
-                let parentCount = 0;
-                let parentY = 0;
-                let isMaternal = false;
+            // Рисуем линии для каждой супружеской пары
+            marriedCouples.forEach(couple => {
+                const husbandPt = getElementCenter(couple.husband);
+                const wifePt = getElementCenter(couple.wife);
                 
-                pair.parents.forEach(parentId => {
-                    const pt = getElementCenter(parentId);
-                    if (pt) {
-                        parentX += pt.x;
-                        parentY = pt.y; // берем Y последнего родителя
-                        parentCount++;
-                        const parentCard = document.querySelector(`[data-id="${parentId}"]`);
-                        if (parentCard && parentCard.classList.contains('maternal-line')) {
-                            isMaternal = true;
-                        }
-                }
-                });
+                if (!husbandPt || !wifePt) return;
                 
-                if (parentCount === 0) return;
-                parentX /= parentCount;
+                // Горизонтальная линия между супругами
+                const midY = husbandPt.y;
+                const leftX = Math.min(husbandPt.x, wifePt.x);
+                const rightX = Math.max(husbandPt.x, wifePt.x);
                 
-                // Для каждого ребенка рисуем линию
-                pair.children.forEach(childId => {
+                const marriageLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                marriageLine.setAttribute('x1', leftX);
+                marriageLine.setAttribute('y1', midY);
+                marriageLine.setAttribute('x2', rightX);
+                marriageLine.setAttribute('y2', midY);
+                marriageLine.classList.add('marriage-line');
+                svg.appendChild(marriageLine);
+                
+                // Точка соединения (середина между супругами)
+                const connectX = (husbandPt.x + wifePt.x) / 2;
+                
+                // Линии к детям
+                couple.children.forEach(childId => {
                     const childPt = getElementCenter(childId);
                     if (!childPt) return;
                     
+                    const isMaternal = document.querySelector(`[data-id="${couple.wife}"]`).classList.contains('maternal-line');
                     const lineClass = isMaternal ? 'maternal-path' : 'paternal-path';
                     
+                    // Вертикальная линия от точки соединения к ребенку
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    const midY = (parentY + childPt.y) / 2;
-                    const d = `M ${parentX},${parentY} C ${parentX},${midY} ${childPt.x},${midY} ${childPt.x},${childPt.y}`;
+                    const midChildY = (midY + childPt.y) / 2;
+                    const d = `M ${connectX},${midY} C ${connectX},${midChildY} ${childPt.x},${midChildY} ${childPt.x},${childPt.y}`;
                     path.setAttribute('d', d);
                     path.classList.add(lineClass);
                     svg.appendChild(path);
                 });
             });
         }
+
+        // Поиск
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            const results = [];
+            for (const [id, person] of Object.entries(personDetails)) {
+                if (person.name.toLowerCase().includes(query)) {
+                    results.push({ id, name: person.name });
+                }
+            }
+            
+            if (results.length > 0) {
+                searchResults.innerHTML = results.map(r => 
+                    `<div class="search-result-item" onclick="selectSearchResult('${r.id}')">${r.name}</div>`
+                ).join('');
+                searchResults.style.display = 'block';
+            } else {
+                searchResults.innerHTML = '<div class="search-result-item">Ничего не найдено</div>';
+                searchResults.style.display = 'block';
+            }
+        });
+        
+        function selectSearchResult(id) {
+            document.querySelector(`[data-id="${id}"]`).click();
+            searchResults.style.display = 'none';
+            searchInput.value = '';
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                searchResults.style.display = 'none';
+            }
+        });
 
         // Масштабирование
         let scale = 1.0;
