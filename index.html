@@ -74,9 +74,9 @@
         .tree {
             display: flex;
             flex-direction: column;
-            min-width: 5500px; /* Значительно увеличено для прокрутки влево/вправо */
+            min-width: 5500px;
             min-height: 3200px;
-            padding: 80px 400px 80px 600px; /* Огромные отступы слева и справа */
+            padding: 80px 400px 80px 600px;
             position: relative;
         }
 
@@ -85,14 +85,14 @@
             justify-content: center;
             align-items: flex-start;
             position: relative;
-            margin-bottom: 200px; /* Увеличено расстояние между поколениями */
+            margin-bottom: 200px;
             width: 100%;
         }
 
         .gen-row {
             display: flex;
             flex-wrap: nowrap;
-            gap: 80px; /* Увеличено расстояние между карточками */
+            gap: 80px;
             justify-content: center;
             position: relative;
         }
@@ -124,10 +124,18 @@
         }
 
         .person-card.main-person {
-            border-color: #ffd966;
             border-width: 4px;
-            box-shadow: 0 0 30px gold;
             transform: scale(1.02);
+        }
+
+        .person-card.main-person.paternal-line {
+            border-color: #3b82f6;
+            box-shadow: 0 0 30px #3b82f6;
+        }
+
+        .person-card.main-person.maternal-line {
+            border-color: #c77dff;
+            box-shadow: 0 0 30px #c77dff;
         }
 
         .person-card.dimmed {
@@ -170,7 +178,7 @@
             color: #ddd;
         }
 
-        /* SVG ЛИНИЙ */
+        /* SVG ЛИНИЙ - нейтрально-белые */
         .connector-svg {
             position: absolute;
             top: 0;
@@ -182,33 +190,28 @@
         }
 
         .connector-svg path, .connector-svg line {
-            stroke-width: 3px;
+            stroke-width: 2.5px;
             fill: none;
             stroke-linecap: round;
             transition: all 0.3s;
         }
 
-        .paternal-path {
-            stroke: #3b82f6;
-            stroke-opacity: 0.6;
-        }
-
-        .maternal-path {
-            stroke: #c77dff;
-            stroke-opacity: 0.6;
+        .neutral-path {
+            stroke: #e0e0e0;
+            stroke-opacity: 0.5;
         }
 
         .marriage-line {
-            stroke: #ffd966;
-            stroke-opacity: 0.8;
-            stroke-width: 3px;
+            stroke: #e0e0e0;
+            stroke-opacity: 0.5;
+            stroke-width: 2.5px;
             stroke-dasharray: 5,5;
         }
 
         .highlighted-path {
             stroke: #ffd966 !important;
             filter: drop-shadow(0 0 12px gold);
-            stroke-width: 5px !important;
+            stroke-width: 4px !important;
             stroke-opacity: 1 !important;
         }
 
@@ -300,6 +303,13 @@
             width: 16px;
             height: 16px;
             background: #c77dff;
+            border-radius: 4px;
+        }
+
+        .neutral-box {
+            width: 16px;
+            height: 16px;
+            background: #e0e0e0;
             border-radius: 4px;
         }
 
@@ -905,6 +915,10 @@
                         <div class="maternal-box"></div>
                         <span>Сторона матери</span>
                     </div>
+                    <div class="legend-item">
+                        <div class="neutral-box"></div>
+                        <span>Линии (нейтральные)</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1258,7 +1272,6 @@
             
             marriedCouples.forEach(couple => {
                 let parentX, parentY;
-                let isMaternal = false;
                 
                 if (couple.husband && couple.wife && couple.husband !== '' && couple.wife !== '') {
                     const husbandPt = getElementCenter(couple.husband);
@@ -1279,7 +1292,6 @@
                     svg.appendChild(marriageLine);
                     
                     parentX = (husbandPt.x + wifePt.x) / 2;
-                    isMaternal = document.querySelector(`[data-id="${couple.wife}"]`).classList.contains('maternal-line');
                 } else {
                     const parentId = couple.husband || couple.wife;
                     if (!parentId) return;
@@ -1287,10 +1299,9 @@
                     if (!parentPt) return;
                     parentX = parentPt.x;
                     parentY = parentPt.y;
-                    isMaternal = document.querySelector(`[data-id="${parentId}"]`).classList.contains('maternal-line');
                 }
                 
-                const lineClass = isMaternal ? 'maternal-path' : 'paternal-path';
+                const lineClass = 'neutral-path';
                 
                 couple.children.forEach(childId => {
                     const childPt = getElementCenter(childId);
