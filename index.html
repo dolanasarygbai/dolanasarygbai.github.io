@@ -3,81 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Генеалогическое древо · 6 поколений · с линиями</title>
+    <title>Генеалогическое древо · 6 поколений</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #0a0c12;
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: #0a0c12;
             color: #eef3fc;
-            overflow: hidden;
+            line-height: 1.4;
             height: 100vh;
-            width: 100vw;
+            overflow: hidden;
         }
 
-        .scroll-container {
-            width: 100%;
+        .main-content {
+            display: flex;
             height: 100vh;
-            overflow: auto;
             position: relative;
-            background: radial-gradient(circle at 30% 30%, #17212b, #020304);
-            scroll-behavior: smooth;
         }
 
         .tree-wrapper {
-            min-width: 2800px;        /* широкий горизонт для братьев */
-            min-height: 2000px;
-            padding: 60px 100px;
+            flex: 3;
+            background: #0f1419;
+            overflow: auto;
+            position: relative;
+            background: radial-gradient(circle at 30% 30%, #17212b, #030405);
+        }
+
+        .info-sidebar {
+            flex: 1;
+            min-width: 340px;
+            max-width: 400px;
+            background: #121a24;
+            border-left: 2px solid #3b5e8b;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: -5px 0 25px rgba(0,0,0,0.7);
+            transition: transform 0.3s ease;
+            z-index: 1000;
             position: relative;
         }
 
-        /* SVG ПОЛОТНО ПОВЕРХ ВСЕГО */
-        .connector-svg {
+        .info-sidebar.hidden {
+            transform: translateX(100%);
             position: absolute;
+            right: 0;
             top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;              /* линии видны, но не мешают кликам */
+            bottom: 0;
         }
 
-        .connector-svg path {
-            stroke-width: 3px;
-            fill: none;
-            stroke-linecap: round;
-            transition: stroke 0.2s, filter 0.2s;
+        .section-title {
+            color: #ffd966;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3b5e8b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        /* цвета линий: от отца, от матери (смешанные) */
-        .connector-svg .paternal-line-path {
-            stroke: #3b82f6;
-            stroke-opacity: 0.7;
-        }
-        .connector-svg .maternal-line-path {
-            stroke: #c77dff;
-            stroke-opacity: 0.7;
-        }
-        .connector-svg .highlight-path {
-            stroke: #ffd966 !important;
-            filter: drop-shadow(0 0 12px gold);
-            stroke-width: 5px !important;
-            transition: 0.1s;
+        /* ДЕРЕВО */
+        .tree {
+            display: flex;
+            flex-direction: column;
+            min-width: 2400px;
+            min-height: 1800px;
+            padding: 60px 80px;
+            position: relative;
         }
 
-        /* КАРТОЧКИ */
         .generation {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 130px;
+            justify-content: center;
+            align-items: flex-start;
             position: relative;
-            z-index: 30;
-            flex-wrap: nowrap;
+            margin-bottom: 100px;
             width: 100%;
         }
 
@@ -85,382 +93,776 @@
             display: flex;
             flex-wrap: nowrap;
             gap: 50px;
-            justify-content: flex-start;
+            justify-content: center;
             position: relative;
         }
 
         .person-card {
             min-width: 200px;
-            max-width: 240px;
+            max-width: 230px;
             background: #1e2a36;
-            border-radius: 24px;
-            padding: 16px 12px 12px 12px;
-            box-shadow: 0 20px 30px rgba(0,0,0,0.9), 0 0 0 2px rgba(120,180,255,0.2);
+            border-radius: 20px;
+            padding: 15px 12px;
+            border: 2px solid;
             text-align: center;
-            font-size: 0.95rem;
-            transition: all 0.15s;
             cursor: pointer;
-            border-left: 6px solid;
-            border-right: 6px solid;
-            color: #f0f5ff;
-            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             z-index: 50;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(2px);
+            color: #f0f5ff;
         }
 
-        .paternal-line {
-            border-left-color: #3b82f6;
-            border-right-color: #3b82f6;
-            box-shadow: 0 0 15px #3b82f6, 0 8px 15px black;
+        .person-card.paternal-line {
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px #3b82f6;
         }
-        .maternal-line {
-            border-left-color: #c77dff;
-            border-right-color: #c77dff;
-            box-shadow: 0 0 15px #c77dff, 0 8px 15px black;
+
+        .person-card.maternal-line {
+            border-color: #c77dff;
+            box-shadow: 0 0 15px #c77dff;
+        }
+
+        .person-card.main-person {
+            border-color: #ffd966;
+            border-width: 4px;
+            box-shadow: 0 0 30px gold;
+            transform: scale(1.02);
+        }
+
+        .person-card.dimmed {
+            opacity: 0.3;
+            filter: grayscale(0.7);
+            transition: 0.3s;
+        }
+
+        .person-card.highlighted {
+            opacity: 1 !important;
+            filter: none !important;
+            transform: scale(1.05);
+            z-index: 100;
         }
 
         .person-card:hover {
-            transform: scale(1.02);
-            background: #2b3b4b;
+            transform: scale(1.03);
+            box-shadow: 0 0 25px cyan;
         }
 
-        .person-card.selected {
-            border: 4px solid #ffd966;
-            background: #2f4255;
-            box-shadow: 0 0 30px gold;
-        }
-
-        .name {
-            font-weight: 800;
-            font-size: 1.2rem;
-            background: rgba(0,0,0,0.4);
-            border-radius: 40px;
-            padding: 4px 0;
-            margin-bottom: 5px;
+        .person-name {
+            font-weight: 700;
+            font-size: 1.1rem;
             color: white;
+            margin-bottom: 5px;
         }
 
-        .years {
+        .person-years {
             font-size: 0.85rem;
-            color: #b2c9e5;
+            color: #b0c6da;
+            margin-bottom: 5px;
         }
 
-        /* поколение 1 */
-        .gen1 {
-            margin-bottom: 120px;
-        }
-        .paternal-group {
-            display: flex;
-            gap: 40px;
-            width: 45%;
-        }
-        .maternal-group {
-            display: flex;
-            gap: 40px;
-            justify-content: flex-end;
-            width: 45%;
-        }
-        .split-center {
-            width: 10%;
-            color: #6d8eb0;
-            font-weight: 300;
+        .person-relation {
+            font-size: 0.75rem;
+            background: #2f3b4b;
+            padding: 4px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            color: #ddd;
         }
 
-        /* боковая панель */
-        .info-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 360px;
-            max-width: 92vw;
-            max-height: 90vh;
-            overflow-y: auto;
-            background: #111c28;
-            border-radius: 36px;
-            padding: 25px;
-            box-shadow: -10px 10px 40px black, 0 0 0 2px #3b5e8b;
-            z-index: 2000;
-            backdrop-filter: blur(12px);
-            border: 1px solid #5a7d9c;
-            color: #eaf0fc;
+        /* SVG ЛИНИЙ */
+        .connector-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .connector-svg path {
+            stroke-width: 3px;
+            fill: none;
+            stroke-linecap: round;
+            transition: all 0.3s;
+        }
+
+        .paternal-path {
+            stroke: #3b82f6;
+            stroke-opacity: 0.6;
+        }
+
+        .maternal-path {
+            stroke: #c77dff;
+            stroke-opacity: 0.6;
+        }
+
+        .highlighted-path {
+            stroke: #ffd966 !important;
+            filter: drop-shadow(0 0 12px gold);
+            stroke-width: 5px !important;
+            stroke-opacity: 1 !important;
+        }
+
+        /* ПАНЕЛЬ (как в понравившемся примере) */
+        .selected-info {
+            background: #1f2a36;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #ffd966;
+            margin-bottom: 20px;
+        }
+
+        .selected-name {
+            font-size: 1.3rem;
+            color: #ffd966;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .info-details {
             font-size: 0.9rem;
         }
 
-        .info-panel h2 {
-            border-bottom: 3px solid #ab7ef0;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-            font-weight: 400;
-            letter-spacing: 2px;
-            color: #dbe6ff;
+        .info-row {
+            margin-bottom: 8px;
+            display: flex;
+            border-bottom: 1px solid #2f3b4b;
+            padding-bottom: 5px;
         }
 
-        .info-photo {
-            width: 100%;
-            border-radius: 24px;
-            margin-bottom: 20px;
-            border: 4px solid #2b4a6b;
-            background: #203241;
-            min-height: 160px;
-            object-fit: cover;
+        .info-label {
+            font-weight: bold;
+            min-width: 100px;
+            color: #b3caf5;
         }
 
-        .info-detail {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 12px 6px;
-            margin-top: 20px;
-        }
-        .info-detail .label {
-            font-weight: 800;
-            color: #b8d1ff;
-            text-align: right;
-            border-right: 2px solid #7a58b1;
-            padding-right: 8px;
-        }
-        .info-detail .value {
-            text-align: left;
+        .siblings-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 15px;
         }
 
-        .footnote {
-            margin-top: 25px;
-            background: #19232e;
-            padding: 14px;
-            border-radius: 24px;
-            border-left: 8px solid #d4a373;
+        .sibling {
+            padding: 6px 12px;
+            background: #2a3645;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid #4d6278;
+            transition: 0.2s;
+        }
+
+        .sibling:hover {
+            background: #3b4b60;
+            border-color: #ffd966;
+        }
+
+        .sibling.active {
+            background: #ffd966;
+            color: #1a1a2e;
+            font-weight: bold;
+            border-color: #fff;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 0.8rem;
         }
 
-        @media (max-width: 700px) {
-            .info-panel {
-                width: 95%;
-                right: 2.5%;
-                top: auto;
-                bottom: 10px;
-                max-height: 45vh;
-            }
-            .person-card {
-                min-width: 150px;
-            }
+        .paternal-box {
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+
+        .maternal-box {
+            width: 16px;
+            height: 16px;
+            background: #c77dff;
+            border-radius: 4px;
+        }
+
+        .notes {
+            background: #1a2633;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #d4a373;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .important-note {
+            background: #1f2e3f;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #4a7bac;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .current-selection {
+            background: #1a2532;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+
+        .zoom-btn {
+            background: #2a3b4c;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 1px solid #5f7f9f;
+        }
+
+        .toggle-panel-btn {
+            background: #ffd966;
+            color: #1a1a2e;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-<div class="scroll-container" id="scrollContainer">
-    <div class="tree-wrapper" id="treeWrapper">
-        <!-- ПОЛОТНО ДЛЯ ЛИНИЙ (СТРЕЛОК) -->
-        <svg class="connector-svg" id="lineSvg"></svg>
-
-        <!-- ПОКОЛЕНИЕ 1 (прадеды) -->
-        <div class="generation gen1" id="gen1">
-            <div class="paternal-group">
-                <div class="person-card paternal-line" data-id="yaar" data-side="paternal"><div class="name">Чооду Яар Сулепей</div><div class="years">~1860 г.</div><div class="relation-badge">прадед (отца)</div></div>
-                <div class="person-card paternal-line" data-id="sevil" data-side="paternal"><div class="name">Чооду Севил Балчыма</div><div class="years">~1865 г.</div><div class="relation-badge">прабабушка (отца)</div></div>
-                <div class="person-card paternal-line" data-id="chambal" data-side="paternal"><div class="name">Чооду Чигжит Чамбал</div><div class="years">~1865 г.</div><div class="relation-badge">прадед (отца)</div></div>
-                <div class="person-card paternal-line" data-id="sagaan" data-side="paternal"><div class="name">Чооду Седип Сагаан</div><div class="years">~1870 г.</div><div class="relation-badge">прабабушка (отца)</div></div>
+    <div class="main-content">
+        <div class="tree-wrapper" id="treeWrapper">
+            <div class="tree" id="tree">
+                <svg class="connector-svg" id="lineSvg"></svg>
+                
+                <!-- ПОКОЛЕНИЕ 1 (прадеды) -->
+                <div class="generation" id="gen1" style="margin-bottom: 80px;">
+                    <div class="gen-row" style="justify-content: space-between; width: 100%;">
+                        <!-- сторона отца (синие) -->
+                        <div style="display: flex; gap: 40px;">
+                            <div class="person-card paternal-line" data-id="yaar" data-side="paternal">
+                                <div class="person-name">Чооду Яар Сулепей</div>
+                                <div class="person-years">~1860 г.</div>
+                                <div class="person-relation">прадед (отца)</div>
+                            </div>
+                            <div class="person-card paternal-line" data-id="sevil" data-side="paternal">
+                                <div class="person-name">Чооду Севил Балчыма</div>
+                                <div class="person-years">~1865 г.</div>
+                                <div class="person-relation">прабабушка (отца)</div>
+                            </div>
+                            <div class="person-card paternal-line" data-id="chambal" data-side="paternal">
+                                <div class="person-name">Чооду Чигжит Чамбал</div>
+                                <div class="person-years">~1865 г.</div>
+                                <div class="person-relation">прадед (отца)</div>
+                            </div>
+                            <div class="person-card paternal-line" data-id="sagaan" data-side="paternal">
+                                <div class="person-name">Чооду Седип Сагаан</div>
+                                <div class="person-years">~1870 г.</div>
+                                <div class="person-relation">прабабушка (отца)</div>
+                            </div>
+                        </div>
+                        
+                        <div style="color: #6d8eb0; padding: 0 20px;">⸻ разрыв ⸻</div>
+                        
+                        <!-- сторона матери (лиловые) -->
+                        <div style="display: flex; gap: 40px;">
+                            <div class="person-card maternal-line" data-id="dolzat" data-side="maternal">
+                                <div class="person-name">Чооду Долзат Чамыян</div>
+                                <div class="person-years">~1868 г.</div>
+                                <div class="person-relation">прабабушка (матери)</div>
+                            </div>
+                            <div class="person-card maternal-line" data-id="danzyn" data-side="maternal">
+                                <div class="person-name">Чооду Данзын Чигжит</div>
+                                <div class="person-years">~1863 г.</div>
+                                <div class="person-relation">прадед (матери)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ПОКОЛЕНИЕ 2 (бабушки/дедушки) -->
+                <div class="generation" id="gen2" style="margin-bottom: 100px;">
+                    <div class="gen-row">
+                        <div class="person-card paternal-line" data-id="dozum">
+                            <div class="person-name">Допуу Дозум</div>
+                            <div class="person-years">3.08.1894 г.</div>
+                            <div class="person-relation">бабушка по отцу</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="sirzhim">
+                            <div class="person-name">Долгар Сиржим</div>
+                            <div class="person-years">10.05.1899 г.</div>
+                            <div class="person-relation">сестра матери отца</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="monke">
+                            <div class="person-name">Начын Мөңке</div>
+                            <div class="person-years">18.09.1890 г.</div>
+                            <div class="person-relation">дедушка по отцу</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="demchik">
+                            <div class="person-name">Чооду Демчиккей</div>
+                            <div class="person-years">15.09.1889 г.</div>
+                            <div class="person-relation">дедушка по матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="azhyk">
+                            <div class="person-name">Чооду Ажыккай</div>
+                            <div class="person-years">~1888 г.</div>
+                            <div class="person-relation">бабушка по матери</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ПОКОЛЕНИЕ 3 (родители, братья, сестры матери) -->
+                <div class="generation" id="gen3" style="margin-bottom: 120px;">
+                    <div class="gen-row" style="gap: 30px;">
+                        <!-- отец и его сёстры/братья (синие) -->
+                        <div class="person-card paternal-line" data-id="manchalmaa">
+                            <div class="person-name">Манчалмаа</div>
+                            <div class="person-years">10.09.1918 г.</div>
+                            <div class="person-relation">сестра отца</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="sandan">
+                            <div class="person-name">Санчат Сандан</div>
+                            <div class="person-years">1.08.1920 г.</div>
+                            <div class="person-relation">отец</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="sandal">
+                            <div class="person-name">Саңдал</div>
+                            <div class="person-years">15.02.1924 г.</div>
+                            <div class="person-relation">брат отца</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="sanmaa">
+                            <div class="person-name">Саңмаа</div>
+                            <div class="person-years">31.08.1931 г.</div>
+                            <div class="person-relation">сестра отца</div>
+                        </div>
+                        
+                        <!-- мать и её братья/сестры (лиловые) - ВСЕ 9 ЧЕЛОВЕК -->
+                        <div class="person-card maternal-line" data-id="saadak">
+                            <div class="person-name">Саадак Астыр</div>
+                            <div class="person-years">05.07.1904 г.</div>
+                            <div class="person-relation">ст. брат матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="ayyyr">
+                            <div class="person-name">Айыыр Дүшбүн</div>
+                            <div class="person-years">01.09.1909 г.</div>
+                            <div class="person-relation">ст. брат матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="dapyy">
+                            <div class="person-name">Дапый-оол Н.</div>
+                            <div class="person-years">10.04.1915 г.</div>
+                            <div class="person-relation">ст. брат матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="dungmai">
+                            <div class="person-name">Чооду Дуңмай</div>
+                            <div class="person-years">15.03.1917 г.</div>
+                            <div class="person-relation">ст. сестра матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="okashtay" id="mother">
+                            <div class="person-name">Санчат Окаштай</div>
+                            <div class="person-years">01.03.1920 г.</div>
+                            <div class="person-relation">мать</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="diimaa">
+                            <div class="person-name">Диимаа</div>
+                            <div class="person-years">08.03.1922 г.</div>
+                            <div class="person-relation">мл. сестра матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="khuurak">
+                            <div class="person-name">Хуурак-оол</div>
+                            <div class="person-years">15.01.1923 г.</div>
+                            <div class="person-relation">мл. брат матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="chazhil">
+                            <div class="person-name">Чажылмаа Е.</div>
+                            <div class="person-years">03.07.1929 г.</div>
+                            <div class="person-relation">мл. сестра матери</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="onermaa">
+                            <div class="person-name">Онермаа</div>
+                            <div class="person-years">01.01.1936 г.</div>
+                            <div class="person-relation">мл. сестра матери</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ПОКОЛЕНИЕ 4 (я и братья/сестры) -->
+                <div class="generation" id="gen4" style="margin-bottom: 100px;">
+                    <div class="gen-row" style="gap: 25px;">
+                        <div class="person-card paternal-line" data-id="viktor">
+                            <div class="person-name">Виктор</div>
+                            <div class="person-years">22.08.1939 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="suktar">
+                            <div class="person-name">Суктар-оол</div>
+                            <div class="person-years">14.09.1944 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="bolato">
+                            <div class="person-name">Болат-оол</div>
+                            <div class="person-years">25.05.1947 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="kanool">
+                            <div class="person-name">Кан-оол</div>
+                            <div class="person-years">19.10.1949 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="valia">
+                            <div class="person-name">Валентина</div>
+                            <div class="person-years">25.08.1951 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="boris">
+                            <div class="person-name">Борис</div>
+                            <div class="person-years">05.10.1953 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="vladimir">
+                            <div class="person-name">Владимир</div>
+                            <div class="person-years">12.02.1956 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="alex" id="me">
+                            <div class="person-name">Александр</div>
+                            <div class="person-years">06.06.1959 г.</div>
+                            <div class="person-relation">я</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="alexey">
+                            <div class="person-name">Алексей</div>
+                            <div class="person-years">05.07.1961 г.</div>
+                        </div>
+                        <div class="person-card paternal-line" data-id="olga">
+                            <div class="person-name">Ольга</div>
+                            <div class="person-years">25.08.1963 г.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ПОКОЛЕНИЕ 5 -->
+                <div class="generation" id="gen5" style="margin-bottom: 80px;">
+                    <div class="gen-row">
+                        <div class="person-card maternal-line" data-id="dolana">
+                            <div class="person-name">Долана</div>
+                            <div class="person-years">23.09.1994 г.</div>
+                        </div>
+                        <div class="person-card maternal-line" data-id="choig">
+                            <div class="person-name">Чойгаана</div>
+                            <div class="person-years">10.11.1996 г.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ПОКОЛЕНИЕ 6 -->
+                <div class="generation" id="gen6">
+                    <div class="gen-row">
+                        <div class="person-card maternal-line" data-id="victoria">
+                            <div class="person-name">Виктория</div>
+                            <div class="person-years">~2018 г.</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="split-center">⸻ разрыв ⸻</div>
-            <div class="maternal-group">
-                <div class="person-card maternal-line" data-id="dolzat" data-side="maternal"><div class="name">Чооду Долзат Чамыян</div><div class="years">~1868 г.</div><div class="relation-badge">прабабушка (матери)</div></div>
-                <div class="person-card maternal-line" data-id="danzyn" data-side="maternal"><div class="name">Чооду Данзын Чигжит</div><div class="years">~1863 г.</div><div class="relation-badge">прадед (матери)</div></div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="resetZoom()">↺</button>
             </div>
         </div>
 
-        <!-- ПОКОЛЕНИЕ 2 -->
-        <div class="generation gen2" id="gen2">
-            <div class="gen-row">
-                <div class="person-card paternal-line" data-id="dozum" data-side="paternal"><div class="name">Допуу Дозум</div><div class="years">3.08.1894 г.</div><div class="relation-badge">бабушка по отцу</div></div>
-                <div class="person-card paternal-line" data-id="sirzhim" data-side="paternal"><div class="name">Долгар Сиржим</div><div class="years">10.05.1899 г.</div><div class="relation-badge">сестра матери отца</div></div>
-                <div class="person-card paternal-line" data-id="monke" data-side="paternal"><div class="name">Начын Мөңке</div><div class="years">18.09.1890 г.</div><div class="relation-badge">дедушка по отцу</div></div>
-                <div class="person-card maternal-line" data-id="demchik" data-side="maternal"><div class="name">Чооду Демчиккей</div><div class="years">15.09.1889 г.</div><div class="relation-badge">дедушка по матери</div></div>
-                <div class="person-card maternal-line" data-id="azhyk" data-side="maternal"><div class="name">Чооду Ажыккай</div><div class="years">~1888 г.</div><div class="relation-badge">бабушка по матери</div></div>
+        <!-- ПАНЕЛЬ (как в понравившемся примере) -->
+        <div class="info-sidebar" id="infoSidebar">
+            <button class="toggle-panel-btn" onclick="togglePanel()">
+                <i class="fas fa-chevron-right"></i> Скрыть панель
+            </button>
+            
+            <div>
+                <h3 class="section-title"><i class="fas fa-user"></i> Выбранный человек</h3>
+                <div class="selected-info" id="selected-info">
+                    <div class="selected-name">Кликните на человека</div>
+                    <div class="info-details">Выберите человека в древе для просмотра информации</div>
+                </div>
+                <div class="current-selection" id="current-selection">
+                    <strong>Текущий выбор:</strong> нет
+                </div>
             </div>
-        </div>
 
-        <!-- ПОКОЛЕНИЕ 3 (родители, братья, сестры) -->
-        <div class="generation gen3" id="gen3">
-            <div class="gen-row">
-                <!-- отец -->
-                <div class="person-card paternal-line" data-id="manchalmaa"><div class="name">Манчалмаа</div><div class="years">10.09.1918 г.</div></div>
-                <div class="person-card paternal-line" data-id="sandan"><div class="name">Санчат Сандан</div><div class="years">1.08.1920 г.</div></div>
-                <div class="person-card paternal-line" data-id="sandal"><div class="name">Начын Саңдал</div><div class="years">15.02.1924 г.</div></div>
-                <div class="person-card paternal-line" data-id="sanmaa"><div class="name">Саңмаа</div><div class="years">31.08.1931 г.</div></div>
-                <div class="person-card paternal-line" data-id="tyvaa"><div class="name">Тываа Торжу</div><div class="years">1.05.1930 г.</div></div>
-                <div class="person-card paternal-line" data-id="chagarmaa"><div class="name">Чагармаа</div><div class="years">23.08.1936 г.</div></div>
-                <!-- мать и её братья/сёстры (лиловые) -->
-                <div class="person-card maternal-line" data-id="okashtay"><div class="name">Санчат Окаштай</div><div class="years">1.03.1920 г.</div></div>
-                <div class="person-card maternal-line" data-id="diimaa"><div class="name">Диимаа</div><div class="years">8.03.1922 г.</div></div>
-                <div class="person-card maternal-line" data-id="huurak"><div class="name">Хуурак-оол</div><div class="years">15.01.1923 г.</div></div>
+            <div style="margin-top: 20px;">
+                <h3 class="section-title"><i class="fas fa-users"></i> Братья и сестры матери (9 человек)</h3>
+                <div class="siblings-group" id="siblings-list"></div>
             </div>
-        </div>
 
-        <!-- ПОКОЛЕНИЕ 4 (я, братья, сестры, дети Манчалмаа) -->
-        <div class="generation gen4" id="gen4">
-            <div class="gen-row">
-                <div class="person-card paternal-line" data-id="monge"><div class="name">Монгал Мөнге</div><div class="years">30.04.1937 г.</div></div>
-                <div class="person-card paternal-line" data-id="eliz"><div class="name">Монгал Елизавета</div><div class="years">30.04.1941 г.</div></div>
-                <div class="person-card paternal-line" data-id="diizen"><div class="name">Диизенмаа</div><div class="years">8.08.1944 г.</div></div>
-                <div class="person-card paternal-line" data-id="viktor"><div class="name">Виктор</div><div class="years">22.08.1939 г.</div></div>
-                <div class="person-card paternal-line" data-id="suktar"><div class="name">Суктар-оол</div><div class="years">14.09.1944 г.</div></div>
-                <div class="person-card paternal-line" data-id="bolato"><div class="name">Болат-оол</div><div class="years">25.05.1947 г.</div></div>
-                <div class="person-card paternal-line" data-id="kanool"><div class="name">Кан-оол</div><div class="years">19.10.1949 г.</div></div>
-                <div class="person-card paternal-line" data-id="valia"><div class="name">Валентина</div><div class="years">25.08.1951 г.</div></div>
-                <div class="person-card paternal-line" data-id="boris"><div class="name">Борис</div><div class="years">5.10.1953 г.</div></div>
-                <div class="person-card paternal-line" data-id="vlad"><div class="name">Владимир</div><div class="years">12.02.1956 г.</div></div>
-                <div class="person-card paternal-line" data-id="alex" id="me"><div class="name">Александр</div><div class="years">6.06.1959 г.</div></div>
-                <div class="person-card paternal-line" data-id="alexey"><div class="name">Алексей</div><div class="years">5.07.1961 г.</div></div>
-                <div class="person-card paternal-line" data-id="olga"><div class="name">Ольга</div><div class="years">25.08.1963 г.</div></div>
-                <div class="person-card maternal-line" data-id="saida"><div class="name">Сарыгбай Саида</div><div class="years">10.12.1964 г.</div></div>
+            <div style="margin-top: 20px;">
+                <h3 class="section-title"><i class="fas fa-info-circle"></i> Примечания</h3>
+                <div class="important-note">
+                    <p><strong>Основные данные:</strong> На основе записей актов о рождении 1945 года.</p>
+                    <p><strong>Место:</strong> Ү-Шынаа, Арбан №2, Тува.</p>
+                    <p><strong>МЧАЭ:</strong> мал, чер ажыл-агый эвилели (аратское крестьянское хозяйство)</p>
+                </div>
+                
+                <div class="notes">
+                    <p><strong>⚠️ Важное примечание:</strong></p>
+                    <p>Могут быть несовпадения имен в виду паспортизации, во избежание несчастных случаев, отдан на воспитание другой семье, по поверьям: чтобы обмануть смерть, болезни.</p>
+                </div>
             </div>
-        </div>
 
-        <!-- ПОКОЛЕНИЕ 5 -->
-        <div class="generation gen5" id="gen5">
-            <div class="gen-row">
-                <div class="person-card maternal-line" data-id="dolana"><div class="name">Сарыгбай Долана</div><div class="years">23.09.1994 г.</div></div>
-                <div class="person-card maternal-line" data-id="choig"><div class="name">Сарыгбай Чойгаана</div><div class="years">10.11.1996 г.</div></div>
+            <div style="margin-top: 20px;">
+                <h3 class="section-title"><i class="fas fa-key"></i> Легенда</h3>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="paternal-box"></div>
+                        <span>Сторона отца</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="maternal-box"></div>
+                        <span>Сторона матери</span>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- ПОКОЛЕНИЕ 6 -->
-        <div class="generation gen6" id="gen6">
-            <div class="gen-row">
-                <div class="person-card maternal-line" data-id="victoria"><div class="name">Сарыгбай Виктория</div><div class="years">~2018 г.</div></div>
-            </div>
-        </div>
-
-        <div style="margin-top: 50px; background:#192734; padding: 20px; border-radius: 60px; max-width:700px;">
-            ⚠️ <strong>Примечание:</strong> могут быть несовпадения имен в виду паспортизации, отдан на воспитание, по поверьям: чтобы обмануть смерть, болезни.
         </div>
     </div>
-</div>
 
-<!-- боковая панель -->
-<div class="info-panel" id="infoPanel">
-    <h2>🧬 карточка</h2>
-    <img id="infoPhoto" class="info-photo" src="https://via.placeholder.com/300x200/1a2f3a/ccc?text=выберите+человека" alt="">
-    <div id="infoContent"><p>Нажмите на человека для просмотра данных</p></div>
-    <div class="footnote" id="dynamicFootnote">могут быть расхождения в именах</div>
-</div>
-
-<script>
-    (function() {
-        // ----- ДАННЫЕ ДЛЯ КАРТОЧЕК (краткие, но структурированные) -----
+    <script>
+        // ДАННЫЕ ДЛЯ КАРТОЧЕК (подробные)
         const personDetails = {
-            dozum: { name: 'Допуу Дозум', photo: 'images/dopuu_dozum.jpg', full: 'родство: моя бабушка по отцу, мать моего отца. пол: жен. рожд. 3.08.1894 г. отец: Чооду Яар Сулепей, мать: Чооду Севил Балчыма. Св-во РЭ №101142, запись 144, книга №1. Место: Ү-Шынаа, арбан №2.' },
-            monke: { name: 'Начын Мөңке', photo: 'images/nachyn_monke.jpg', full: 'дедушка по отцу. 18.09.1890 г. Св-во РЭ 101141. родители: Чооду Чигжит Чамбал и Чооду Седип Сагаан. Ү-Шынаа, арбан №2.' },
-            demchik: { name: 'Чооду Демчиккей Данзын', photo: 'images/demchikkey.jpg', full: 'отец матери. 15.09.1889 г., Ү-Шынаа. В записи Темчикей Чаваа. Род занятий: МЧАЭ — мал, чер ажыл-агый эвилели (аратское крестьянское хоз-во). Родители: Долзат Чамыян и Данзын Чигжит.' },
-            sandan: { name: 'Санчат Сандан Начынович', photo: 'images/sanchat_sandan.jpg', full: 'мой отец. 1.08.1920 г., Ү-Шынаа. родители: Начын Мөңке и Допуу Дозум. Св-во РЭ№101228, запись №65, МЧАЭ 10 дугаар.' },
-            okashtay: { name: 'Санчат Окаштай Демчикейовна', photo: 'images/okashtay.jpg', full: 'моя мать. 1.03.1920 г., Ү-Шынаа. родители: Демчиккей Данзын и Ажыккай Узун. Девичья: Чооду Оккаштай.' },
-            alex: { name: 'Санчат Александр Санданович', photo: 'images/alexander.jpg', full: 'я. 06.06.1959 Самагалтай. высшее КФКПИ, госслужащий, инженер-строитель. РАГС, менеджер-экономист.' },
-            saida: { name: 'Сарыгбай Саида Кечил-ооловна', photo: 'images/saida.jpg', full: 'дочь Саңмаа, 10.12.1964' }
+            // 1 поколение
+            yaar: { name: 'Чооду Яар Сулепей (Чооду Яар Дандар)', birth: '~1860', details: 'Прадедушка со стороны отца. Муж Чооду Севил Балчыма.' },
+            sevil: { name: 'Чооду Севил Балчыма', birth: '~1865', details: 'Прабабушка со стороны отца. Жена Чооду Яар Сулепей.' },
+            chambal: { name: 'Чооду Чигжит Чамбал', birth: '~1865', details: 'Прадедушка (дед отца). Муж Чооду Седип Сагаан.' },
+            sagaan: { name: 'Чооду Седип Сагаан', birth: '~1870', details: 'Прабабушка (дед отца). Жена Чооду Чигжит Чамбал.' },
+            dolzat: { name: 'Чооду Долзат Чамыян', birth: '~1868', details: 'Прабабушка со стороны матери.' },
+            danzyn: { name: 'Чооду Данзын Чигжит', birth: '~1863', details: 'Прадедушка со стороны матери.' },
+            
+            // 2 поколение
+            dozum: { name: 'Допуу Дозум', birth: '3 августа 1894', details: 'Моя бабушка по отцу, мать моего отца. Отец: Чооду Яар Сулепей, мать: Чооду Севил Балчыма. Св-во РЭ №101142, запись 144. Место: Ү-Шынаа, арбан №2.' },
+            sirzhim: { name: 'Долгар Сиржим', birth: '10 мая 1899', details: 'Сестра матери моего отца. Отец: Чооду Яар Дандар, мать: Чооду Севил Балчыма. Св-во РЭ №111810. Место: Ү-Шынаа, арбан №2.' },
+            monke: { name: 'Начын Мөңке', birth: '18 сентября 1890', details: 'Мой дедушка по отцу, отец моего отца. Отец: Чооду Чигжит Чамбал, мать: Чооду Седип Сагаан. Св-во РЭ 101141. Место: Ү-Шынаа, арбан №2.' },
+            demchik: { name: 'Чооду Демчиккей Данзын', birth: '15 сентября 1889', details: 'Отец моей матери. В записи акта: Темчикей Чаваа. Род деятельности: мал, тараа ажылы кылып чораан. МЧАЭ кежигүүнү. Родители: Чооду Долзат Чамыян и Чооду Данзын Чигжит.' },
+            azhyk: { name: 'Чооду Ажыккай Узун ашак уруу', birth: '~1888', details: 'Бабушка по материнской линии. Место рождения Ү-Шынаа. В 1945 году ей было 57 лет.' },
+            
+            // 3 поколение (братья и сестры матери)
+            saadak: { name: 'Саадак Астыр', birth: '5 июля 1904', details: 'Старший брат моей матери. В документах указаны другие родители: Чооду Дөмүр-оол Өршээ (62 года) и Чооду Ажыккай Тываан (умершая 19.09.1945). Возможно, был отдан на воспитание.' },
+            ayyyr: { name: 'Айыыр Дүшбүн', birth: '1 сентября 1909', details: 'Старший брат моей матери. Родился в О-Шынаа. В документах указаны другие родители: Шалык Айыыр Барзыңай (49 лет) и Шалык Тыыдый Чамыйан (59 лет). Имена разные, возможно отдан на воспитание.' },
+            dapyy: { name: 'Дапый-оол Николай', birth: '10 апреля 1915', details: 'Старший брат моей матери. Родился в Ү-Шынаа. Партбилет №7900107, Св-РЭ №111033.' },
+            dungmai: { name: 'Чооду Дуңмай', birth: '15 марта 1917', details: 'Старшая сестра моей матери. Родилась в Ү-Шынаа.' },
+            okashtay: { name: 'Санчат Окаштай Демчикейовна (девичья Чооду Оккаштай Демчиккей)', birth: '1 марта 1920', details: 'Моя мать. Родилась в сумоне Ү-Шынаа.' },
+            diimaa: { name: 'Диимаа Чооду', birth: '8 марта 1922', details: 'Младшая сестра моей матери. Родилась в Арбан №2, сумон У-Шынаа. Отец: Чооду Туктуг Темчикей (56 лет), мать: Чооду Калчан Ногаан (58 лет). Св-во РЭ №111195. Член ВЛКСМ № 22831095. Книга №1 от 17.09.1945, запись №184.' },
+            khuurak: { name: 'Хуурак-оол Чооду', birth: '15 января 1923', details: 'Младший брат моей матери. Родился в Арбан №2, сумон У-Шынаа. Отец: Темчикей Чаваа Данзын (56 лет), мать: Темчикей Ажыккай Узун (умерла). РЭ №101140. Комсомольский билет №2282416.' },
+            chazhil: { name: 'Чажылмаа Елизавета', birth: '3 июля 1929', details: 'Младшая сестра моей матери. Родилась в Арбан №2, сумон У-Шынаа. Отец: Чооду Демчиккей Данзын (57 лет), мать: Чооду Ажыккай Узун (59 лет). РЭ №111041. Комсомольский билет №22832487. Также есть второе имя: Демчикей Чажалмаа (15.08.1929).' },
+            onermaa: { name: 'Демчиккей Онермаа', birth: '1 января 1936', details: 'Младшая сестра моей матери. Родилась в Арбан №2, сумон У-Шынаа. Отец: Демчиккей Чаваа Данзын (56 лет), мать: Чооду Кускелдей Сурун (43 лет). РЭ №101078.' },
+            
+            // отец и его родственники
+            manchalmaa: { name: 'Чооду Манчалмаа', birth: '10 сентября 1918', details: 'Сестра моего отца. Родители: Начын Мөңке и Допуу Дозум. Муж: Монгал Майдыр.' },
+            sandan: { name: 'Санчат Сандан Начынович', birth: '1 августа 1920', details: 'Мой отец. Родился в Ү-Шынаа. Родители: Начын Мөңке и Допуу Дозум. Св-во РЭ№101228, запись №65. МЧАЭде 10 дугаар.' },
+            sandal: { name: 'Начын Саңдал', birth: '15 февраля 1924', details: 'Младший брат моего отца. Родители: Начын Мөңке и Допуу Дозум. Св-во РЭ 101172.' },
+            sanmaa: { name: 'Дөмүр-оол Саңмаа', birth: '31 августа 1931', details: 'Сестра моего отца. Родители: Дөмүр-оол Барза Өртээ и Дөмүр-оол Сүржии Яар (возможно отдана на воспитание). Св-во РЭ №111808.' },
+            
+            // 4 поколение
+            alex: { name: 'Санчат Александр Санданович', birth: '6 июня 1959', details: 'Я. Родился в Самагалтай. Образование: высшее КФКПИ. Род деятельности: госслужащий, инженер-строитель. Второе высшее РАГС при Президенте РФ, менеджер-экономист.' },
+            
+            // 5-6 поколение
+            dolana: { name: 'Сарыгбай Долана Владимировна', birth: '23 сентября 1994', details: 'Дочь Сарыгбай Саиды.' },
+            choig: { name: 'Сарыгбай Чойгаана Владимировна', birth: '10 ноября 1996', details: 'Дочь Сарыгбай Саиды.' },
+            victoria: { name: 'Сарыгбай Виктория', birth: '~2018', details: 'Дочь Сарыгбай Чойгааны.' }
         };
-        function showPerson(id) {
-            const data = personDetails[id] || { name: 'Информация уточняется', photo: '', full: 'подробности не загружены' };
-            document.getElementById('infoPhoto').src = data.photo || 'https://via.placeholder.com/300x200/1e2f3c/b0c4de?text=фото+github';
-            document.getElementById('infoContent').innerHTML = `<div class="info-detail"><span class="label">Имя</span><span class="value">${data.name}</span><span class="label">Детали</span><span class="value">${data.full}</span></div>`;
+
+        // Состояние панели
+        let panelVisible = true;
+        let currentSelectedId = null;
+
+        function togglePanel() {
+            const panel = document.getElementById('infoSidebar');
+            panelVisible = !panelVisible;
+            if (panelVisible) {
+                panel.classList.remove('hidden');
+                panel.querySelector('.toggle-panel-btn').innerHTML = '<i class="fas fa-chevron-right"></i> Скрыть панель';
+            } else {
+                panel.classList.add('hidden');
+                panel.querySelector('.toggle-panel-btn').innerHTML = '<i class="fas fa-chevron-left"></i> Показать панель';
+            }
         }
 
-        // клик по карточке
+        // Клик вне человека - скрываем панель
+        document.getElementById('treeWrapper').addEventListener('click', function(e) {
+            if (!e.target.closest('.person-card')) {
+                // Клик по фону - скрываем панель
+                if (panelVisible) {
+                    togglePanel();
+                }
+            }
+        });
+
+        // Клик по человеку
         document.querySelectorAll('.person-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 e.stopPropagation();
-                document.querySelectorAll('.person-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                if (card.dataset.id) showPerson(card.dataset.id);
-                // подсветка линий (через класс на svg путям)
-                document.querySelectorAll('#lineSvg path').forEach(p => p.classList.remove('highlight-path'));
-                // на самом деле подсветим все линии, для эффекта выбора
-                document.querySelectorAll('#lineSvg path').forEach(p => p.classList.add('highlight-path'));
-                setTimeout(() => document.querySelectorAll('#lineSvg path').forEach(p => p.classList.remove('highlight-path')), 700);
+                
+                // Показываем панель если скрыта
+                if (!panelVisible) {
+                    togglePanel();
+                }
+                
+                const id = card.dataset.id;
+                currentSelectedId = id;
+                
+                // Подсветка предков и потомков (родителей и детей)
+                highlightRelatives(id);
+                
+                // Обновляем информацию в панели
+                updateInfoPanel(id);
+                
+                // Подсветка линий
+                document.querySelectorAll('#lineSvg path').forEach(p => p.classList.remove('highlighted-path'));
+                setTimeout(() => {
+                    document.querySelectorAll('#lineSvg path').forEach(p => p.classList.add('highlighted-path'));
+                }, 50);
+                setTimeout(() => {
+                    document.querySelectorAll('#lineSvg path').forEach(p => p.classList.remove('highlighted-path'));
+                }, 800);
             });
         });
 
-        // ----- ОТРИСОВКА ЛИНИЙ МЕЖДУ ПОКОЛЕНИЯМИ -----
-        function drawConnections() {
+        function highlightRelatives(selectedId) {
+            // Сначала убираем все классы
+            document.querySelectorAll('.person-card').forEach(c => {
+                c.classList.remove('highlighted', 'dimmed', 'main-person');
+            });
+            
+            // Находим выбранного
+            const selected = document.querySelector(`[data-id="${selectedId}"]`);
+            if (!selected) return;
+            
+            selected.classList.add('main-person');
+            
+            // Определяем связи (предки и потомки)
+            const relatives = new Set();
+            relatives.add(selectedId);
+            
+            // Связи из пар (родитель-потомок)
+            connectionPairs.forEach(pair => {
+                if (pair.from === selectedId) relatives.add(pair.to);
+                if (pair.to === selectedId) relatives.add(pair.from);
+            });
+            
+            // Затемняем всех, кроме родственников
+            document.querySelectorAll('.person-card').forEach(card => {
+                const cardId = card.dataset.id;
+                if (!relatives.has(cardId)) {
+                    card.classList.add('dimmed');
+                } else if (cardId !== selectedId) {
+                    card.classList.add('highlighted');
+                }
+            });
+        }
+
+        function updateInfoPanel(id) {
+            const person = personDetails[id];
+            if (!person) return;
+            
+            document.getElementById('current-selection').innerHTML = 
+                `<strong>Текущий выбор:</strong> ${person.name}`;
+            
+            let detailsHtml = person.details || 'Нет дополнительной информации';
+            
+            document.getElementById('selected-info').innerHTML = `
+                <div class="selected-name">${person.name}</div>
+                <div class="info-details">
+                    ${person.birth ? `<div class="info-row"><span class="info-label">Рождение:</span><span>${person.birth} г.</span></div>` : ''}
+                    <div style="margin-top: 10px;">${detailsHtml}</div>
+                </div>
+            `;
+        }
+
+        // Список пар для линий (только родитель -> потомок)
+        const connectionPairs = [
+            // 1->2
+            { from: 'yaar', to: 'dozum' }, { from: 'sevil', to: 'dozum' },
+            { from: 'yaar', to: 'sirzhim' }, { from: 'sevil', to: 'sirzhim' },
+            { from: 'chambal', to: 'monke' }, { from: 'sagaan', to: 'monke' },
+            { from: 'dolzat', to: 'demchik' }, { from: 'danzyn', to: 'demchik' },
+            { from: 'dolzat', to: 'azhyk' }, { from: 'danzyn', to: 'azhyk' },
+            
+            // 2->3
+            { from: 'dozum', to: 'sandan' }, { from: 'monke', to: 'sandan' },
+            { from: 'dozum', to: 'manchalmaa' }, { from: 'monke', to: 'manchalmaa' },
+            { from: 'dozum', to: 'sandal' }, { from: 'monke', to: 'sandal' },
+            { from: 'demchik', to: 'saadak' }, { from: 'azhyk', to: 'saadak' },
+            { from: 'demchik', to: 'ayyyr' }, { from: 'azhyk', to: 'ayyyr' },
+            { from: 'demchik', to: 'dapyy' }, { from: 'azhyk', to: 'dapyy' },
+            { from: 'demchik', to: 'dungmai' }, { from: 'azhyk', to: 'dungmai' },
+            { from: 'demchik', to: 'okashtay' }, { from: 'azhyk', to: 'okashtay' },
+            { from: 'demchik', to: 'diimaa' }, { from: 'azhyk', to: 'diimaa' },
+            { from: 'demchik', to: 'khuurak' }, { from: 'azhyk', to: 'khuurak' },
+            { from: 'demchik', to: 'chazhil' }, { from: 'azhyk', to: 'chazhil' },
+            { from: 'demchik', to: 'onermaa' }, { from: 'azhyk', to: 'onermaa' },
+            
+            // 3->4
+            { from: 'sandan', to: 'viktor' }, { from: 'okashtay', to: 'viktor' },
+            { from: 'sandan', to: 'suktar' }, { from: 'okashtay', to: 'suktar' },
+            { from: 'sandan', to: 'bolato' }, { from: 'okashtay', to: 'bolato' },
+            { from: 'sandan', to: 'kanool' }, { from: 'okashtay', to: 'kanool' },
+            { from: 'sandan', to: 'valia' }, { from: 'okashtay', to: 'valia' },
+            { from: 'sandan', to: 'boris' }, { from: 'okashtay', to: 'boris' },
+            { from: 'sandan', to: 'vladimir' }, { from: 'okashtay', to: 'vladimir' },
+            { from: 'sandan', to: 'alex' }, { from: 'okashtay', to: 'alex' },
+            { from: 'sandan', to: 'alexey' }, { from: 'okashtay', to: 'alexey' },
+            { from: 'sandan', to: 'olga' }, { from: 'okashtay', to: 'olga' },
+            
+            // 4->5
+            { from: 'alex', to: 'dolana' }, { from: 'alex', to: 'choig' },
+            // 5->6
+            { from: 'choig', to: 'victoria' }
+        ];
+
+        // Рисование линий
+        function drawLines() {
             const svg = document.getElementById('lineSvg');
-            svg.innerHTML = ''; // очищаем
-
-            // Связи: родитель -> потомок. Определим пары по data-id (родитель, дитя)
-            // в реальном проекте лучше задать массив соответствий, здесь пропишем ключевые для демонстрации.
-            const pairs = [
-                // 1->2 поколение (со стороны отца)
-                { from: 'yaar', to: 'dozum' },    // Яар -> Дозум
-                { from: 'sevil', to: 'dozum' },   // Севил -> Дозум
-                { from: 'yaar', to: 'sirzhim' },  // Яар -> Сиржим
-                { from: 'sevil', to: 'sirzhim' },
-                { from: 'chambal', to: 'monke' }, // Чамбал -> Мөңке
-                { from: 'sagaan', to: 'monke' },
-                // со стороны матери
-                { from: 'dolzat', to: 'demchik' },
-                { from: 'danzyn', to: 'demchik' },
-                { from: 'dolzat', to: 'azhyk' },  // Долзат -> Ажыккай? (по логике мать)
-                { from: 'danzyn', to: 'azhyk' },
-
-                // 2->3 поколение
-                { from: 'dozum', to: 'sandan' },  // Дозум -> Сандан
-                { from: 'monke', to: 'sandan' },  // Мөңке -> Сандан
-                { from: 'dozum', to: 'manchalmaa' },
-                { from: 'monke', to: 'manchalmaa' },
-                { from: 'dozum', to: 'sandal' },
-                { from: 'monke', to: 'sandal' },
-                { from: 'dozum', to: 'sanmaa' },
-                { from: 'monke', to: 'sanmaa' },
-                { from: 'demchik', to: 'okashtay' }, // Демчик -> мать
-                { from: 'azhyk', to: 'okashtay' },
-                { from: 'demchik', to: 'diimaa' },
-                { from: 'azhyk', to: 'diimaa' },
-                { from: 'demchik', to: 'huurak' },
-                { from: 'azhyk', to: 'huurak' },
-
-                // 3->4 поколение (от Сандана и Окаштай к детям)
-                { from: 'sandan', to: 'viktor' }, { from: 'okashtay', to: 'viktor' },
-                { from: 'sandan', to: 'suktar' }, { from: 'okashtay', to: 'suktar' },
-                { from: 'sandan', to: 'bolato' }, { from: 'okashtay', to: 'bolato' },
-                { from: 'sandan', to: 'kanool' }, { from: 'okashtay', to: 'kanool' },
-                { from: 'sandan', to: 'valia' }, { from: 'okashtay', to: 'valia' },
-                { from: 'sandan', to: 'boris' }, { from: 'okashtay', to: 'boris' },
-                { from: 'sandan', to: 'vlad' }, { from: 'okashtay', to: 'vlad' },
-                { from: 'sandan', to: 'alex' }, { from: 'okashtay', to: 'alex' },
-                { from: 'sandan', to: 'alexey' }, { from: 'okashtay', to: 'alexey' },
-                { from: 'sandan', to: 'olga' }, { from: 'okashtay', to: 'olga' },
-                // от Манчалмаа к её детям
-                { from: 'manchalmaa', to: 'monge' },
-                { from: 'manchalmaa', to: 'eliz' },
-                { from: 'manchalmaa', to: 'diizen' },
-                // от Саңмаа к Саиде (через много, для демонстрации)
-                { from: 'sanmaa', to: 'saida' },
-                // 4->5 поколение от Саиды
-                { from: 'saida', to: 'dolana' },
-                { from: 'saida', to: 'choig' },
-                // 5->6
-                { from: 'choig', to: 'victoria' }
-            ];
-
+            svg.innerHTML = '';
+            
             function getElementCenter(id) {
                 const el = document.querySelector(`[data-id="${id}"]`);
                 if (!el) return null;
                 const rect = el.getBoundingClientRect();
-                const wrapperRect = document.getElementById('treeWrapper').getBoundingClientRect();
-                // координаты относительно wrapper (так как svg наложен абсолютно)
+                const treeRect = document.getElementById('tree').getBoundingClientRect();
                 return {
-                    x: rect.left - wrapperRect.left + rect.width / 2,
-                    y: rect.top - wrapperRect.top + rect.height / 2
+                    x: rect.left - treeRect.left + rect.width / 2,
+                    y: rect.top - treeRect.top + rect.height / 2
                 };
             }
-
-            pairs.forEach(p => {
-                const fromPt = getElementCenter(p.from);
-                const toPt = getElementCenter(p.to);
+            
+            connectionPairs.forEach(pair => {
+                const fromPt = getElementCenter(pair.from);
+                const toPt = getElementCenter(pair.to);
                 if (!fromPt || !toPt) return;
-
-                // определяем цвет линии по родителю (paternal или maternal)
-                const fromCard = document.querySelector(`[data-id="${p.from}"]`);
-                let lineClass = 'paternal-line-path';
-                if (fromCard && fromCard.classList.contains('maternal-line')) lineClass = 'maternal-line-path';
-
+                
+                const fromCard = document.querySelector(`[data-id="${pair.from}"]`);
+                const lineClass = fromCard && fromCard.classList.contains('maternal-line') ? 'maternal-path' : 'paternal-path';
+                
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                // кривая Безье
                 const midY = (fromPt.y + toPt.y) / 2;
                 const d = `M ${fromPt.x},${fromPt.y} C ${fromPt.x},${midY} ${toPt.x},${midY} ${toPt.x},${toPt.y}`;
                 path.setAttribute('d', d);
@@ -469,14 +871,52 @@
             });
         }
 
-        // рисуем при загрузке и ресайзе
+        // Заполняем список братьев и сестер матери
+        function renderSiblingsList() {
+            const siblings = [
+                { id: 'saadak', name: 'Саадак' },
+                { id: 'ayyyr', name: 'Айыыр' },
+                { id: 'dapyy', name: 'Дапый-оол' },
+                { id: 'dungmai', name: 'Дуңмай' },
+                { id: 'okashtay', name: 'Окаштай' },
+                { id: 'diimaa', name: 'Диимаа' },
+                { id: 'khuurak', name: 'Хуурак-оол' },
+                { id: 'chazhil', name: 'Чажылмаа' },
+                { id: 'onermaa', name: 'Онермаа' }
+            ];
+            
+            const container = document.getElementById('siblings-list');
+            container.innerHTML = '';
+            
+            siblings.forEach(s => {
+                const btn = document.createElement('div');
+                btn.className = 'sibling';
+                btn.textContent = s.name;
+                btn.onclick = () => {
+                    document.querySelector(`[data-id="${s.id}"]`).click();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Масштабирование
+        let scale = 1.0;
+        function zoomIn() { scale = Math.min(scale + 0.1, 2); applyZoom(); }
+        function zoomOut() { scale = Math.max(scale - 0.1, 0.5); applyZoom(); }
+        function resetZoom() { scale = 1; applyZoom(); }
+        function applyZoom() {
+            document.querySelectorAll('.person-card').forEach(p => {
+                p.style.transform = `scale(${scale})`;
+            });
+        }
+
+        // Инициализация
         window.addEventListener('load', () => {
-            setTimeout(drawConnections, 100); // небольшая задержка для рендера карточек
+            renderSiblingsList();
+            setTimeout(drawLines, 200);
         });
-        window.addEventListener('resize', drawConnections);
-        document.getElementById('scrollContainer').addEventListener('scroll', drawConnections);
-        // также можно по mutationObserver, но для демо достаточно
-    })();
-</script>
+        window.addEventListener('resize', drawLines);
+        document.getElementById('treeWrapper').addEventListener('scroll', drawLines);
+    </script>
 </body>
 </html>
